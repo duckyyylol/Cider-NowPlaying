@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Now Playing</title>
+
+    <style>
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Black.woff2') format('woff2'), url('CobblerSans-Black.woff') format('woff');
+        font-weight: 900;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Light.woff2') format('woff2'), url('CobblerSans-Light.woff') format('woff');
+        font-weight: 300;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-SemiBold.woff2') format('woff2'), url('CobblerSans-SemiBold.woff') format('woff');
+        font-weight: 600;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Medium.woff2') format('woff2'), url('CobblerSans-Medium.woff') format('woff');
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Bold.woff2') format('woff2'), url('CobblerSans-Bold.woff') format('woff');
+        font-weight: bold;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Regular.woff2') format('woff2'), url('CobblerSans-Regular.woff') format('woff');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      .inline {
+        font-family: 'Cobbler Sans';
+        /* max-width: 700px;
+        min-width: 400px; */
+        width: 200px;
+        height: 200px;
+        color: white;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .song {
+        font-size: 10em;
+        font-weight: 900;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="inline">
+      <h1 class="song">0</h1>
+    </div>
+
+    <script>
+      let inlineDetails = document.querySelector('.song');
+
+      function fetchTrack() {
+        fetch('/pingStreak').then(r =>
+          r.json().then(track => {
+            if (!track.count) return;
+            inlineDetails.innerText = `${track.count}`;
+          })
+        );
+      }
+
+      setInterval(fetchTrack, 1000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Now Playing</title>
+
+    <style>
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Black.woff2') format('woff2'), url('CobblerSans-Black.woff') format('woff');
+        font-weight: 900;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Light.woff2') format('woff2'), url('CobblerSans-Light.woff') format('woff');
+        font-weight: 300;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-SemiBold.woff2') format('woff2'), url('CobblerSans-SemiBold.woff') format('woff');
+        font-weight: 600;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Medium.woff2') format('woff2'), url('CobblerSans-Medium.woff') format('woff');
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Bold.woff2') format('woff2'), url('CobblerSans-Bold.woff') format('woff');
+        font-weight: bold;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Regular.woff2') format('woff2'), url('CobblerSans-Regular.woff') format('woff');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      .inline {
+        font-family: 'Cobbler Sans';
+        /* max-width: 700px;
+        min-width: 400px; */
+        width: 100%;
+        height: 50px;
+        color: white;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-start;
+      }
+
+      /* .inline * {
+        animation-delay: 5s;
+      } */
+
+      .inline .title {
+        font-weight: 900;
+      }
+
+      .inline .artist {
+        font-weight: 500;
+      }
+
+      .inline .album {
+        font-size: 1em;
+        font-weight: 600;
+      }
+
+      .scroll-img {
+        height: 40px;
+        border-radius: 100px;
+      }
+
+      .inline .song {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        min-width: 100px;
+        width: auto;
+        height: 50px;
+        gap: 10px;
+      }
+
+      .inline-song {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5em;
+        margin-right: 1em;
+        text-wrap: none;
+        white-space: nowrap;
+      }
+
+      @keyframes scroll {
+        0% {
+          transform: translate(0, 0);
+        }
+        /* 50% {
+          transform: translate(-50%, 0);
+        } */
+        100% {
+          transform: translate(-100%, 0);
+        }
+      }
+
+      .pretty-container {
+        border-radius: 0.8em;
+        font-family: 'Cobbler Sans';
+        max-width: 700px;
+        min-width: 400px;
+        width: auto;
+        height: auto;
+        max-height: 200px;
+        background-color: rgb(20, 20, 20, 0.9);
+
+        color: white;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding-right: 2em;
+      }
+
+      .image {
+        height: 100%;
+        width: auto;
+        aspect-ratio: 1/1;
+        display: flex;
+        margin: 0.5em;
+      }
+
+      .image img {
+        border-radius: 0.8em;
+        max-height: 200px;
+        height: auto;
+      }
+
+      .songDetails {
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: baseline;
+        justify-content: space-evenly;
+        /* margin-inline: 1em; */
+        /* padding: 0.5em; */
+        width: 90%;
+        text-align: left;
+        padding-left: 1em;
+        /* padding: -10px; */
+        /* gap: -1.5em; */
+        /* float: left; */
+      }
+
+      .song {
+        width: 100%;
+        height: auto;
+        /* scale: calc(100%); */
+        font-size: clamp(1.6em, 1.8em, 1.9em);
+        font-weight: 300;
+        /* container-name: song; */
+      }
+
+      /* @container song (max-height: 66px) {
+        .album {
+          scale: 12;
+        }
+      } */
+
+      .title {
+        font-weight: 900;
+      }
+
+      .artist {
+        font-weight: 500;
+      }
+
+      .album {
+        font-size: 1.4em;
+        font-weight: 600;
+      }
+
+      .np {
+        font-size: 1.1em;
+        padding: -10px;
+        font-weight: 300;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="inline">
+      <div class="song"></div>
+    </div>
+    <div class="pretty-container">
+      <div class="image">
+        <img src="" alt="" id="songImage" />
+      </div>
+      <div class="songDetails">
+        <!-- <h3 class="np">Now Playing</h3> -->
+        <h1 class="song">
+          <span class="title">Best Song Ever</span> <span class="attr"> — <span class="artist">ducky</span></span>
+        </h1>
+        <h3 class="album">ducky's Greatest Hits</h3>
+      </div>
+    </div>
+
+    <script>
+      // function GetURLParameter(sParam){
+      //     var sPageURL = window.location.search.substring(1);
+      //     var sURLVariables = sPageURL.split('&');
+      //     for (var i = 0; i < sURLVariables.length; i++)
+      //     {
+      //         var sParameterName = sURLVariables[i].split('=');
+      //         if (sParameterName[0] == sParam)
+      //         {
+      //             return sParameterName[1];
+      //         }
+      //     }
+      // }​
+      // stack overflow ftw
+      let inlineContainer = document.querySelector('.inline');
+      let inlineDetails = document.querySelector('.song');
+      let prettyContainer = document.querySelector('.pretty-container');
+      let songImage = document.querySelector('#songImage');
+      let songTitle = document.querySelector('.title');
+      let songArtist = document.querySelector('.artist');
+      let songAlbum = document.querySelector('.album');
+
+      let typeParam = new URLSearchParams(location.search).get('inline');
+      let type;
+      if (!typeParam) type = 'pretty';
+      if (typeParam) type = 'inline';
+      if (typeParam === 'scroll') type = 'scroll';
+      console.log(type);
+
+      let trackId = null;
+
+      function fetchTrack() {
+        fetch('/nowplaying').then(r =>
+          r.json().then(track => {
+            if (!track.id || track.id === trackId) return;
+            trackId = track.id;
+
+            if (type === 'pretty') {
+              inlineContainer.style.display = 'none';
+              console.log(track);
+              songImage.src = track.imageUrl;
+              songTitle.innerText = track.title;
+              songArtist.innerText = track.artist;
+              songAlbum.innerText = track.album;
+            } else if (type === 'inline') {
+              prettyContainer.style.display = 'none';
+              inlineDetails.innerHTML = `<span>Now Playing | <span class="title">${track.title}</span> — <span class="artist">${track.artist}</span> <span class="album">[${track.album}]</span></span>`;
+            } else if (type === 'scroll') {
+              prettyContainer.style.display = 'none';
+              inlineContainer.style.animation = 'scroll 20s linear infinite';
+              inlineContainer.style.width = '100%';
+              //   inlineContainer.style.height = '50px';
+              //   inlineDetails.style.textwrap = 'none';
+              inlineContainer.style.backgroundcolor = 'rgb(173, 147, 58,0.8)';
+              inlineDetails.innerHTML =
+                `<span class="inline-song"><img class="scroll-img" src="${track.imageUrl}"/><span class="title">${track.title}</span> — <span class="artist">${track.artist}</span> <span class="album">[${track.album}]</span></span>\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b`.repeat(
+                  10
+                );
+            }
+          })
+        );
+      }
+
+      //   window.onload(() => fetchTrack());
+
+      setInterval(fetchTrack, 3000);
+    </script>
+  </body>
+</html>
