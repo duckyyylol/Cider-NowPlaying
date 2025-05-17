@@ -44,7 +44,7 @@ class PingStreak {
 
 }
 
-let streak = new PingStreak("334392742266535957");
+// let streak = new PingStreak("334392742266535957");
 
 interface Track {
     id: string;
@@ -73,9 +73,9 @@ app.get("/pingStreak/overlay", async (req, res) => {
     res.sendFile(path.join(__dirname, "/streak.html"))
 })
 
-app.get("/pingStreak", (req, res) => {
-    res.send({ count: streak.getCount() })
-})
+// app.get("/pingStreak", (req, res) => {
+//     res.send({ count: streak.getCount() })
+// })
 
 app.get("/nowplaying", async (req, res): Promise<any> => {
     let np = await axios.get(lastFmUrl)
@@ -99,36 +99,41 @@ app.get("/nowplaying", async (req, res): Promise<any> => {
     // res.send(np.data.recenttracks)
     let firstTrack = np.data.recenttracks.track[0]
 
-    if (firstTrack["@attr"]?.nowplaying) {
-        let songId = btoa(firstTrack.name)
-        trackData = {
-            id: songId,
-            artist: firstTrack.artist['#text'],
-            album: firstTrack.album["#text"],
-            title: firstTrack.name,
-            imageUrl: firstTrack.image.find(i => i.size === "large")["#text"],
-            nowplaying: firstTrack["@attr"].nowplaying,
-            trackUrl: firstTrack.url
-        }
+    try {
+        if (firstTrack["@attr"]?.nowplaying) {
+            let songId = btoa(encodeURI(firstTrack.name))
+            trackData = {
+                id: songId,
+                artist: firstTrack.artist['#text'],
+                album: firstTrack.album["#text"],
+                title: encodeURI(firstTrack.name),
+                imageUrl: firstTrack.image.find(i => i.size === "extralarge")["#text"],
+                nowplaying: firstTrack["@attr"].nowplaying,
+                trackUrl: firstTrack.url
+            }
 
-        if (trackData.title !== null && trackData.artist !== null && trackData.imageUrl !== null) {
+            if (trackData.title !== null && trackData.artist !== null && trackData.imageUrl !== null) {
+                res.send(trackData)
+            }
+        } else {
+            trackData = {
+                id: "0",
+                artist: "Playing",
+                album: "Nothing Playing",
+                title: "Nothing is",
+                imageUrl: "https://picsum.photos/150",
+                nowplaying: false,
+                trackUrl: "https://example.com"
+            }
+
+            // currentTrackId = trackData.id
+
+
             res.send(trackData)
         }
-    } else {
-        trackData = {
-            id: "0",
-            artist: "Playing",
-            album: "Nothing Playing",
-            title: "Nothing is",
-            imageUrl: "https://picsum.photos/150",
-            nowplaying: false,
-            trackUrl: "https://example.com"
-        }
-
-        // currentTrackId = trackData.id
-
-
-        res.send(trackData)
+    } catch (err) {
+        res.sendStatus(404)
+        console.log("AXIOS", err)
     }
 
 })
@@ -152,31 +157,32 @@ client.on("newTrack", (track: Track) => {
     console.log(client?.user?.username)
     console.log("NEW SONG")
     console.log(track)
-    let channelId = "1370893947605618782"
+    let channelId = process.env.CHANNEL_ID as string;
     let channel: TextChannel = client.guilds.cache.get(process.env.GUILD_ID as string)?.channels.cache.get(channelId) as TextChannel
-    let container = new ContainerBuilder().addMediaGalleryComponents(new MediaGalleryBuilder().addItems([{ media: { url: track.imageUrl } }])).addTextDisplayComponents(new TextDisplayBuilder().setContent([`## Now Playing`, `<a:RadioSpin:1341207082971693178> [**${track.title}** — ${track.artist}](${track.trackUrl})`].join("\n"))).addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large)).addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ducky Radio — vibe out :)`))
+    let container = new ContainerBuilder().addMediaGalleryComponents(new MediaGalleryBuilder().addItems([{ media: { url: track.imageUrl, width: 1024, height: 1024 } }])).addTextDisplayComponents(new TextDisplayBuilder().setContent([`## Now Playing`, `<a:RadioSpin:1341207082971693178> [**${decodeURI(track.title)}** — ${track.artist}](${track.trackUrl})`].join("\n"))).addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large)).addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ducky Radio — vibe out :)`))
     channel.send({ flags: [MessageFlags.IsComponentsV2], components: [container] })
 })
 
-client.on("messageCreate", async (message: Message) => {
-    // console.log(message)
-    if (message.author.bot) return;
-    if (message.channelId !== process.env.CHANNEL_ID || message.guildId !== process.env.GUILD_ID) return;
-    let user = streak.getUserId();
+// client.on("messageCreate", async (message: Message) => {
+//     // console.log(message)
+//     if (message.author.bot) return;
+//     if (message.channelId !== process.env.CHANNEL_ID || message.guildId !== process.env.GUILD_ID) return;
+//     // let user = streak.getUserId();
 
-    let dev = true;
-    console.log(message.mentions.users.has(user))
-    if (message.mentions.users.has(user) && (!dev && message.author.id === user)) return;
-    if (message.mentions.users.has(user)) {
+//     let dev = true;
+//     console.log(message.mentions.users.has(user))
+//     if (message.mentions.users.has(user) && (!dev && message.author.id === user)) return;
+//     if (message.mentions.users.has(user)) {
 
-        streak.add();
-        if (!dev) {
-            let nowplaying = await axios.get("http://localhost:1234/nowplaying")
-            message.react("1339305319108706305")
-            message.reply({ flags: [MessageFlags.IsComponentsV2], components: [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent([`## 🔥 Ping Streak`, `*ducky has been pinged ${streak.getCount()}* time${streak.getCount() === 1 ? "" : "s"}!`, ``, `ducky is asleep! Obviously, the best thing to do is build up a ping streak!`, ``, `Check ducky's stream to see the live streak, and vibe out with ducky's re-animated corpse.`].join("\n"))).addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large)).addTextDisplayComponents(new TextDisplayBuilder().setContent([`### Now Playing`, `> <a:RadioSpin:1341207082971693178> [**${nowplaying.data.title}** — ${nowplaying.data.artist}](${nowplaying.data.trackUrl})`].join("\n")))] })
-        }
-    }
-})
+//         message.reply({ flags: [MessageFlags.IsComponentsV2], components: [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ducky is asleep!\nbut she's still here, providing the vibes. stick around and hang out, enjoy the Minecraft jams :)`)).addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large)).addTextDisplayComponents(new TextDisplayBuilder().setContent(`if you can't hear the music, unmute or turn up <@1265790838789640343>, ya dork!`))] })
+//         streak.add();
+//         if (!dev) {
+//             let nowplaying = await axios.get("http://localhost:1234/nowplaying")
+//             message.react("1339305319108706305")
+//             message.reply({ flags: [MessageFlags.IsComponentsV2], components: [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent([`## 🔥 Ping Streak`, `*ducky has been pinged ${streak.getCount()}* time${streak.getCount() === 1 ? "" : "s"}!`, ``, `ducky is asleep! Obviously, the best thing to do is build up a ping streak!`, ``, `Check ducky's stream to see the live streak, and vibe out with ducky's re-animated corpse.`].join("\n"))).addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large)).addTextDisplayComponents(new TextDisplayBuilder().setContent([`### Now Playing`, `> <a:RadioSpin:1341207082971693178> [**${nowplaying.data.title}** — ${nowplaying.data.artist}](${nowplaying.data.trackUrl})`].join("\n")))] })
+//         }
+//     }
+// })
 
 app.listen(process.env.PORT, (er) => {
     console.log("LISTENING!")

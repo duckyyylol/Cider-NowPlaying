@@ -152,7 +152,7 @@
 
       .image img {
         border-radius: 0.8em;
-        max-height: 200px;
+        max-height: 150px;
         height: auto;
       }
 
@@ -265,12 +265,12 @@
               inlineContainer.style.display = 'none';
               console.log(track);
               songImage.src = track.imageUrl;
-              songTitle.innerText = track.title;
+              songTitle.innerText = decodeURI(track.title);
               songArtist.innerText = track.artist;
               songAlbum.innerText = track.album;
             } else if (type === 'inline') {
               prettyContainer.style.display = 'none';
-              inlineDetails.innerHTML = `<span>Now Playing | <span class="title">${track.title}</span> — <span class="artist">${track.artist}</span> <span class="album">[${track.album}]</span></span>`;
+              inlineDetails.innerHTML = `<span>Now Playing | <span class="title">${decodeURI(track.title)}</span> — <span class="artist">${track.artist}</span> <span class="album">[${track.album}]</span></span>`;
             } else if (type === 'scroll') {
               prettyContainer.style.display = 'none';
               inlineContainer.style.animation = 'scroll 20s linear infinite';
@@ -278,10 +278,9 @@
               //   inlineContainer.style.height = '50px';
               //   inlineDetails.style.textwrap = 'none';
               inlineContainer.style.backgroundcolor = 'rgb(173, 147, 58,0.8)';
-              inlineDetails.innerHTML =
-                `<span class="inline-song"><img class="scroll-img" src="${track.imageUrl}"/><span class="title">${track.title}</span> — <span class="artist">${track.artist}</span> <span class="album">[${track.album}]</span></span>\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b`.repeat(
-                  10
-                );
+              inlineDetails.innerHTML = `<span class="inline-song"><img class="scroll-img" src="${track.imageUrl}"/><span class="title">${decodeURI(track.title)}</span> — <span class="artist">${track.artist}</span> <span class="album">[${
+                track.album
+              }]</span></span>\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b`.repeat(10);
             }
           })
         );
