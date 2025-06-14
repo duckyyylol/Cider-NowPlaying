@@ -1,13 +1,16 @@
 import express from "express";
 import * as dotenv from "dotenv"
-import path from "path";
+import path, { join } from "path";
 import axios from "axios";
 import { randomUUID } from "crypto";
 import "discord.js"
-import { Client, ContainerBuilder, IntentsBitField, MediaGalleryBuilder, Message, MessageFlags, SectionBuilder, SeparatorSpacingSize, TextChannel, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
+import { ApplicationCommandData, ApplicationCommandType, Client, ContainerBuilder, IntentsBitField, MediaGalleryBuilder, Message, MessageFlags, SectionBuilder, SeparatorSpacingSize, TextChannel, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import { count } from "console";
+import { readFile, writeFile } from "fs/promises";
 
 dotenv.configDotenv({ path: path.join(__dirname, "/.env") })
+
+let trackFilePath = join(__dirname, "/tracks.json");
 
 const app = express();
 const client: Client = new Client({
@@ -52,8 +55,22 @@ interface Track {
     imageUrl: string;
     album: string;
     title: string;
-    nowplaying: boolean;
     trackUrl: string;
+    // nowplaying: boolean;
+    addedTimestamp: number;
+
+}
+
+interface StoredTrack {
+    [trackId: string]: {
+        id: string;
+        artist: string;
+        imageUrl: string;
+        album: string;
+        title: string;
+        trackUrl: string;
+        addedTimestamp: number;
+    };
 }
 
 // let uuid = randomUUID();
@@ -65,12 +82,103 @@ interface Track {
 //LASTFM_BASE
 let lastFmUrl = `${process.env.LASTFM_BASE}/?method=user.getrecenttracks&user=${process.env.LASTFM_USERNAME}&api_key=${process.env.LASTFM_API_KEY}&format=json&limit=1`
 
+let trackId;
+setInterval(async () => {
+    let { data }: any = await axios.get("http://localhost:1234/nowplaying") as any
+    if (!data) return;
+    console.log("INCOMING | CURRENT")
+    console.log(data.id + " / " + trackId)
+    if (trackId && trackId === data.id) return;
+    // if (data.id === "0" || data.title === "Nothing is") return;
+    trackId = data.id
+    try {
+        let json = JSON.parse((await readFile(trackFilePath, "utf-8")))
+        json[data.id] = data
+        await writeFile(trackFilePath, JSON.stringify(json), "utf-8")
+    } catch (e) {
+        console.log("Couldn't write to tracks.json")
+    }
+    if (client && client.isReady()) client.emit("newTrack", data)
+}, 10000);
+
+app.get("/tracks/history/overlay", async (req, res) => {
+    res.sendFile(join(__dirname, "/trackHistory.html"))
+})
+
+app.get("/tracks/history", async (req, res) => {
+    let payload = {
+        success: false,
+        data: {},
+        currentTrackId: trackId ? trackId : null
+    }
+    let file = await readFile(trackFilePath, "utf-8");
+    console.log(file)
+    if (!file) {
+        res.send(payload)
+        return;
+    }
+    let json = JSON.parse(file);
+    console.log(json)
+    if (!json) {
+        res.send(payload)
+        return;
+    }
+    payload.success = true;
+    payload.data = json
+    res.send(payload)
+})
+
+app.get("/cover/image", async (req, res) => {
+    res.sendFile(path.join(__dirname, "/cover.html"));
+})
+
 app.get("/nowplaying/overlay", async (req, res) => {
     res.sendFile(path.join(__dirname, "/nowplaying.html"))
 })
 
 app.get("/pingStreak/overlay", async (req, res) => {
     res.sendFile(path.join(__dirname, "/streak.html"))
+})
+
+
+app.get("/splash/overlay", async (req, res) => {
+    res.sendFile(path.join(__dirname, "/splash.html"))
+})
+
+app.get("/splash/text", async (req, res) => {
+    if (!process.env.SPLASH_TEXT || process.env.SPLASH_TEXT === null) { res.sendStatus(404); return; }
+    res.send({ success: true, text: process.env.SPLASH_TEXT })
+})
+
+app.get("/debug/:id", async (req, res) => {
+    switch (req.params.id) {
+        case "tracklist": {
+            let payload = {
+                success: false,
+                data: {}
+            }
+            let file = await readFile(trackFilePath, "utf-8");
+            // console.log(file)
+            if (!file) {
+                res.send(payload)
+                return;
+            }
+            let json = JSON.parse(file);
+            // console.log(json)
+            if (!json) {
+                res.send(payload)
+                return;
+            }
+            payload.success = true;
+            payload.data = json
+            res.send(payload)
+
+            break;
+        }
+        default:
+            res.send({ success: false, data: {} })
+            break;
+    }
 })
 
 // app.get("/pingStreak", (req, res) => {
@@ -89,67 +197,95 @@ app.get("/nowplaying", async (req, res): Promise<any> => {
             album: "Nothing Playing",
             title: "Nothing is",
             imageUrl: "https://picsum.photos/150",
-            nowplaying: false,
-            trackUrl: "https://example.com"
+            trackUrl: "https://ducky.wiki/trackNotFound",
+            // nowplaying: true,
+            addedTimestamp: Date.now()
         }
 
         res.send(trackData)
+
+        return;
     }
-    if (!np.data.recenttracks) return res.sendStatus(404)
+    if (!np.data.recenttracks) { res.sendStatus(404); return; }
     // res.send(np.data.recenttracks)
     let firstTrack = np.data.recenttracks.track[0]
 
     try {
-        if (firstTrack["@attr"]?.nowplaying) {
-            let songId = btoa(encodeURI(firstTrack.name))
-            trackData = {
-                id: songId,
-                artist: firstTrack.artist['#text'],
-                album: firstTrack.album["#text"],
-                title: encodeURI(firstTrack.name),
-                imageUrl: firstTrack.image.find(i => i.size === "extralarge")["#text"],
-                nowplaying: firstTrack["@attr"].nowplaying,
-                trackUrl: firstTrack.url
-            }
-
-            if (trackData.title !== null && trackData.artist !== null && trackData.imageUrl !== null) {
-                res.send(trackData)
-            }
-        } else {
-            trackData = {
-                id: "0",
-                artist: "Playing",
-                album: "Nothing Playing",
-                title: "Nothing is",
-                imageUrl: "https://picsum.photos/150",
-                nowplaying: false,
-                trackUrl: "https://example.com"
-            }
-
-            // currentTrackId = trackData.id
-
-
-            res.send(trackData)
+        // if (firstTrack["@attr"]?.nowplaying) {
+        let songId = btoa(encodeURI(firstTrack.name))
+        trackData = {
+            id: songId,
+            artist: firstTrack.artist['#text'] ? encodeURI(firstTrack.artist['#text']) : "Playing",
+            album: firstTrack.album["#text"] ? encodeURI(firstTrack.album["#text"]) : "Nothing Playing",
+            title: firstTrack.name ? encodeURI(firstTrack.name) : "Nothing is",
+            imageUrl: firstTrack.image.find(i => i.size === "extralarge")["#text"] ? firstTrack.image.find(i => i.size === "extralarge")["#text"] : "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png",
+            trackUrl: firstTrack.url ? firstTrack.url : "https://ducky.wiki/trackNotFound",
+            // nowplaying: true,
+            addedTimestamp: Date.now()
         }
+
+        if (trackData.title !== null && trackData.artist !== null && trackData.imageUrl !== null) {
+            res.send(trackData)
+
+            // return;
+        }
+        // } else {
+        //     trackData = {
+        //         id: "0",
+        //         artist: "Playing",
+        //         album: "Nothing Playing",
+        //         title: "Nothing is",
+        //         imageUrl: "https://picsum.photos/150",
+        //         nowplaying: false,
+        //         trackUrl: "https://example.com"
+        //     }
+
+        // currentTrackId = trackData.id
+
+
+        // res.send(trackData)
+
     } catch (err) {
-        res.sendStatus(404)
+        res.send({
+            id: "0",
+            artist: "Playing",
+            album: "Nothing Playing",
+            title: "Nothing is",
+            imageUrl: "https://picsum.photos/150",
+            trackUrl: "https://ducky.wiki/trackNotFound",
+            // nowplaying: true,
+            addedTimestamp: Date.now()
+        })
         console.log("AXIOS", err)
     }
 
 })
 
+const discordCommands: ApplicationCommandData[] = [
+    {
+        name: "last5",
+        description: "View the last 5 tracks played",
+        type: ApplicationCommandType.ChatInput,
+    }
+]
+
 client.on("ready", async (c) => {
     console.log(client.user?.username)
-    let trackId;
-    setInterval(async () => {
-        let { data }: any = await axios.get("http://localhost:1234/nowplaying") as any
-        console.log("INCOMING | CURRENT")
-        console.log(data.id + " / " + trackId)
-        if (trackId && trackId === data.id) return;
-        // if (data.id === "0" || data.title === "Nothing is") return;
-        trackId = data.id
-        client.emit("newTrack", data)
-    }, 5000);
+    client.application?.commands.set(discordCommands).then(r => {
+        console.log(`LOADED ${discordCommands.length} command${discordCommands.length === 1 ? "" : "s"}`)
+    });
+    // let trackId;
+    // setInterval(async () => {
+    //     let { data }: any = await axios.get("http://localhost:1234/nowplaying") as any
+    //     if (!data) return;
+    //     console.log("INCOMING | CURRENT")
+    //     console.log(data.id + " / " + trackId)
+    //     if (trackId && trackId === data.id) return;
+    //     // if (data.id === "0" || data.title === "Nothing is") return;
+    //     trackId = data.id
+    //     client.emit("newTrack", data)
+    // }, 10000);
+
 })
 
 client.on("newTrack", (track: Track) => {
@@ -159,8 +295,49 @@ client.on("newTrack", (track: Track) => {
     console.log(track)
     let channelId = process.env.CHANNEL_ID as string;
     let channel: TextChannel = client.guilds.cache.get(process.env.GUILD_ID as string)?.channels.cache.get(channelId) as TextChannel
-    let container = new ContainerBuilder().addMediaGalleryComponents(new MediaGalleryBuilder().addItems([{ media: { url: track.imageUrl, width: 1024, height: 1024 } }])).addTextDisplayComponents(new TextDisplayBuilder().setContent([`## Now Playing`, `<a:RadioSpin:1341207082971693178> [**${decodeURI(track.title)}** — ${track.artist}](${track.trackUrl})`].join("\n"))).addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large)).addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ducky Radio — vibe out :)`))
+    let container = new ContainerBuilder().addMediaGalleryComponents(new MediaGalleryBuilder().addItems([{ media: { url: track.imageUrl, width: 1024, height: 1024 } }])).addTextDisplayComponents(new TextDisplayBuilder().setContent([`## <a:RadioSpin:1341207082971693178> Now Playing`, `[**${decodeURI(track.title)}** — ${decodeURI(track.artist)}](${track.trackUrl})`].join("\n")))
+    // .addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large))
+    // .addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ducky Radio — vibe out :)`))
     channel.send({ flags: [MessageFlags.IsComponentsV2], components: [container] })
+})
+
+client.on("interactionCreate", async interaction => {
+    if (!interaction.isChatInputCommand()) return;
+    if (interaction.isChatInputCommand()) {
+        if (interaction.commandName === "last5") {
+            let trackList: Track[] = [];
+            let tracks: StoredTrack = JSON.parse(await readFile(trackFilePath, "utf-8"))
+            Object.entries(tracks)
+                .sort((a, b) => b[1].addedTimestamp - a[1].addedTimestamp)
+                .forEach((entry, index) => {
+
+                    //   console.log(entry);
+                    if (trackId && trackId === entry[0]) return;
+                    let track: any = entry[1] as Track;
+                    //   console.log(index, track.addedTimestamp, track.id);
+                    if (trackList.length < 5) trackList.push(track);
+                });
+
+            console.log("YES")
+            console.log(trackList.length)
+            console.log("YES")
+
+            const container = new ContainerBuilder();
+            // container.setAccentColor()
+            container.addTextDisplayComponents(new TextDisplayBuilder().setContent(["## ducky radio™️", "-# Last 5 tracks played"].join("\n")))
+            trackList.forEach((track: Track, index) => {
+                container.addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large))
+                container.addSectionComponents(new SectionBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent([`### ${index + 1}. ${decodeURI(track.title)} — ${decodeURI(track.artist)} [${decodeURI(track.album)}]`, `-# <t:${Math.floor(track.addedTimestamp / 1000)}:R>`, "", `[View this track on Last.fm](${track.trackUrl})`].join("\n"))).setThumbnailAccessory(new ThumbnailBuilder().setURL(track.imageUrl)))
+
+            })
+
+
+
+            interaction.reply({ flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral], components: [container] })
+
+        }
+
+    }
 })
 
 // client.on("messageCreate", async (message: Message) => {
@@ -184,7 +361,11 @@ client.on("newTrack", (track: Track) => {
 //     }
 // })
 
-app.listen(process.env.PORT, (er) => {
+app.listen(process.env.PORT, async (er) => {
     console.log("LISTENING!")
+    let file = await readFile(trackFilePath, "utf-8")
+    if (!file) {
+        await writeFile(trackFilePath, JSON.stringify({}))
+    }
 })
-client.login(process.env.DISCORD_TOKEN)
+if (process.env.DISCORD_TOKEN && process.env.DISCORD_TOKEN !== "") { client.login(process.env.DISCORD_TOKEN) }

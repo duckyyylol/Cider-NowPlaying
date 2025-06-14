@@ -54,6 +54,12 @@
         font-display: swap;
       }
 
+      body {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
       .inline {
         font-family: 'Cobbler Sans';
         /* max-width: 700px;
@@ -66,6 +72,9 @@
         flex-wrap: nowrap;
         align-items: center;
         justify-content: flex-start;
+        background: linear-gradient(236deg, rgba(222, 78, 0, 0.6) 11.93%, rgba(255, 155, 42, 0.6) 85.2%);
+        background-origin: content-box;
+        padding: 3px;
       }
 
       /* .inline * {
@@ -110,6 +119,8 @@
         margin-right: 1em;
         text-wrap: none;
         white-space: nowrap;
+        animation: scroll 6s linear infinite;
+        clip-path: fill-box;
       }
 
       @keyframes scroll {
@@ -132,7 +143,8 @@
         width: auto;
         height: auto;
         max-height: 200px;
-        background-color: rgb(20, 20, 20, 0.9);
+        background-color: rgba(17, 17, 17, 0.7);
+        box-shadow: 0px 0px 1.975px 1.185px rgba(33, 33, 33, 0.36) inset, 0px 0px 7.898px 0px rgba(0, 0, 0, 0.56);
 
         color: white;
         display: flex;
@@ -266,21 +278,25 @@
               console.log(track);
               songImage.src = track.imageUrl;
               songTitle.innerText = decodeURI(track.title);
-              songArtist.innerText = track.artist;
-              songAlbum.innerText = track.album;
+              songArtist.innerText = decodeURI(track.artist);
+              songAlbum.innerText = decodeURI(track.album);
             } else if (type === 'inline') {
               prettyContainer.style.display = 'none';
-              inlineDetails.innerHTML = `<span>Now Playing | <span class="title">${decodeURI(track.title)}</span> — <span class="artist">${track.artist}</span> <span class="album">[${track.album}]</span></span>`;
+              inlineDetails.innerHTML = `<span>Now Playing | <span class="title">${decodeURI(track.title)}</span> — <span class="artist">${decodeURI(track.artist)}</span> <span class="album">[${decodeURI(track.album)}]</span></span>`;
             } else if (type === 'scroll') {
               prettyContainer.style.display = 'none';
-              inlineContainer.style.animation = 'scroll 20s linear infinite';
-              inlineContainer.style.width = '100%';
+              inlineDetails.innerHTML = `<span class="inline-song"><img class="scroll-img" src="${track.imageUrl}"/><span class="title">${decodeURI(track.title)}</span> — <span class="artist">${decodeURI(
+                track.artist
+              )}</span> <span class="album">[${decodeURI(track.album)}]</span></span>\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b`.repeat(5);
+              inlineContainer.style.background = 'linear-gradient(236deg, rgba(222, 78, 0, 0.6) 11.93%, rgba(255, 155, 42, 0.6) 85.2%)';
+              // document.querySelector('.inline-song *').style.animation = '';
+              inlineContainer.style.width = 'auto';
               //   inlineContainer.style.height = '50px';
               //   inlineDetails.style.textwrap = 'none';
-              inlineContainer.style.backgroundcolor = 'rgb(173, 147, 58,0.8)';
-              inlineDetails.innerHTML = `<span class="inline-song"><img class="scroll-img" src="${track.imageUrl}"/><span class="title">${decodeURI(track.title)}</span> — <span class="artist">${track.artist}</span> <span class="album">[${
-                track.album
-              }]</span></span>\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b`.repeat(10);
+              // inlineDetails.innerHTML =
+              //   `<span class="inline-song"><span class="title">BREAKING NEWS</span> — <span class="artist">THE BIRD IS THE WORD!? LOCALS HAVEN'T HEARD</span> <span class="album"></span></span>\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b`.repeat(
+              //     10
+              //   );
             }
           })
         );
@@ -288,7 +304,7 @@
 
       //   window.onload(() => fetchTrack());
 
-      setInterval(fetchTrack, 3000);
+      setInterval(fetchTrack, 10000);
     </script>
   </body>
 </html>

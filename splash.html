@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Splash Text Overlay</title>
+    <style>
+      @keyframes createBox {
+        from {
+          transform: scale(1);
+        }
+        to {
+          transform: scale(1.2);
+        }
+      }
+
+      .splash {
+        animation: createBox 2s infinite alternate-reverse;
+        font-family: 'Minecraftia';
+        color: #ff0;
+        text-align: center;
+        text-shadow: 0px 3.4px 0px rgba(43, 39, 2, 0.8);
+        font-family: Minecraftia;
+        font-size: 1.2em;
+        width: 500px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 class="splash"></h1>
+    <script>
+      let splashText = document.querySelector('.splash');
+      function fetchSplash() {
+        fetch('/splash/text').then(r =>
+          r.json().then(res => {
+            let splash = res.text;
+            if (!splash) return;
+            splashText.innerText = splash;
+          })
+        );
+      }
+
+      setInterval(fetchSplash, 1000);
+    </script>
+  </body>
+</html>
