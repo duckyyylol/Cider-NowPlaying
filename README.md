@@ -17,6 +17,10 @@ BASE URL: http://localhost:1234
 - Marquee - /nowplaying/overlay?inline=scroll
 - Genre Tracker - /nowplaying/genres/overlay
 - Last 5 Tracks - /tracks/history/overlay
-- Cover Art - /cover/image?corner=[square|round|circle]&size=[small(128px)|medium(512px)|large(1024px)]&spin=[1-Clockwise|2-CounterClockwise]
+- Cover Art - /cover/image&size=[small(128px)|medium(512px)|large(1024px)]&spin=[1-Clockwise|2-CounterClockwise]
+- COVER ART URL OPTS
+1. ?corner=[square|round|circle] - Controls the border radius of the image (default: round)
+2. ?size=[small(128px)|medium(512px)|large(1024px)] - Controls the size of the image itself (default: medium)
+3. ?spin=[1-Clockwise|2-CounterClockwise] - Whether or not the cover image will constantly spin in either direction (omit to disable)
 
 [Cider Collective](https://cider.sh)
