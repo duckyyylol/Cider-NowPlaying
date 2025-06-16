@@ -383,7 +383,7 @@ client.on("interactionCreate", async interaction => {
             container.addTextDisplayComponents(new TextDisplayBuilder().setContent(["## ducky radio™️", "-# Last 5 tracks played"].join("\n")))
             trackList.forEach((track: Track, index) => {
                 container.addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large))
-                container.addSectionComponents(new SectionBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent([`### ${index + 1}. ${decodeURI(track.title)} — ${decodeURI(track.artist)} [${decodeURI(track.album)}]`, `-# <t:${Math.floor(track.addedTimestamp / 1000)}:R>`, "", `[View this track on Last.fm](${track.trackUrl})`].join("\n"))).setThumbnailAccessory(new ThumbnailBuilder().setURL(track.imageUrl)))
+                container.addSectionComponents(new SectionBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent([`### ${index + 1}. ${decodeURI(track.title)} — ${decodeURI(track.artist)} [${decodeURI(track.album)}]`, `-# <t:${Math.floor(track.addedTimestamp / 1000)}:R>`, "", `[View this Track](${track.trackUrl})`].join("\n"))).setThumbnailAccessory(new ThumbnailBuilder().setURL(track.imageUrl)))
 
             })
 

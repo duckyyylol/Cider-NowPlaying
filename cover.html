@@ -40,10 +40,6 @@
           transform: rotate(360deg);
         }
       }
-
-      .cover {
-        animation: rotating 10s linear infinite;
-      }
     </style>
     <img src="" alt="" class="cover" />
     <script>
@@ -63,6 +59,12 @@
       if (sizeParam === 'small' || sizeParam === 's' || sizeParam === '128') size = 'small';
       if (sizeParam === 'medium' || sizeParam === 'm' || sizeParam === '512') size = 'medium';
       if (sizeParam === 'large' || sizeParam === 'l' || sizeParam === '1024') size = 'large';
+      let spin = 'n';
+      let spinParam = new URLSearchParams(location.search).get('spin');
+      if (!spinParam) spin = 'n';
+      if (spinParam === '1') spin = 'f';
+      if (spinParam === '2') spin = 'r';
+
       console.log(size);
       let rOpts = {
         'round': '12px',
@@ -89,6 +91,11 @@
             trackId = track.id;
 
             if (track.imageUrl) image.setAttribute('src', track.imageUrl);
+            if (!spin || spin === 'n') image.style.animation = 'none';
+            if (spin !== 'n') image.style.animation = 'rotating 10s linear infinite';
+            if (spin !== 'n') image.style.animationDirection = spin === 'f' ? 'normal' : 'reverse';
+            //
+            // if (spin)
           })
         );
       }

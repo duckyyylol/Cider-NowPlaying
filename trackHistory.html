@@ -143,6 +143,7 @@
               .forEach((entry, index) => {
                 //   console.log(entry);
                 if (currentTrackId && currentTrackId === entry[0]) return;
+                if (entry[0].toString() === '0') return;
                 let track = entry[1];
                 //   console.log(index, track.addedTimestamp, track.id);
                 if (trackList.length < 5) trackList.push(track);
