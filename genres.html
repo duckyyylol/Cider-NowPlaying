@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Now Playing</title>
+    <title>Genre Tags</title>
 
     <style>
       @font-face {
@@ -54,39 +54,57 @@
         font-display: swap;
       }
 
-      .inline {
-        font-family: 'Cobbler Sans';
-        /* max-width: 700px;
-        min-width: 400px; */
-        width: 200px;
-        height: 200px;
-        color: white;
+      .list {
         display: flex;
         flex-direction: row;
+        width: 100%;
+        height: fit-content;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: center;
-        text-align: center;
+        gap: 1em;
       }
 
-      .song {
-        font-size: 10em;
-        font-weight: 900;
+      .genre {
+        height: fit-content;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        border-radius: 0.8em;
+        padding: 0.25em 1em;
+        font-size: 0.8em;
+        letter-spacing: 0.1em;
+        font-family: 'Cobbler Sans';
+        /* background-color: #000; */
+        background: linear-gradient(236deg, rgba(222, 78, 0, 0.6) 11.93%, rgba(255, 155, 42, 0.6) 85%);
+
+        color: white;
       }
     </style>
   </head>
   <body>
-    <div class="inline">
-      <h1 class="song">0</h1>
-    </div>
+    <div class="list"></div>
 
     <script>
-      let inlineDetails = document.querySelector('.song');
-
+      const list = document.querySelector('.list');
       function fetchTrack() {
-        fetch('/pingStreak').then(r =>
-          r.json().then(track => {
-            if (!track.count) return;
-            inlineDetails.innerText = `${track.count}`;
+        let elems = [];
+        fetch('/nowplaying').then(r =>
+          r.json().then(res => {
+            let genres = res.genres;
+            if (genres.length <= 0) return;
+            genres.forEach(genre => {
+              let elem = document.createElement('div');
+              elem.classList.add('genre');
+              elem.innerHTML = `
+        <h2 class="genre-text">${genre}</h2>
+      `;
+
+              elems.push(elem);
+            });
+
+            list.replaceChildren(...elems);
           })
         );
       }

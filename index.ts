@@ -4,7 +4,7 @@ import path, { join } from "path";
 import axios from "axios";
 import { randomUUID } from "crypto";
 import "discord.js"
-import { ApplicationCommandData, ApplicationCommandType, Client, ContainerBuilder, IntentsBitField, MediaGalleryBuilder, Message, MessageFlags, SectionBuilder, SeparatorSpacingSize, TextChannel, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
+import { ApplicationCommandData, ApplicationCommandOptionType, ApplicationCommandType, Client, ContainerBuilder, IntentsBitField, MediaGalleryBuilder, Message, MessageFlags, SectionBuilder, SeparatorSpacingSize, TextChannel, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import { count } from "console";
 import { readFile, writeFile } from "fs/promises";
 
@@ -58,6 +58,7 @@ interface Track {
     trackUrl: string;
     // nowplaying: boolean;
     addedTimestamp: number;
+    genres: string[];
 
 }
 
@@ -70,6 +71,7 @@ interface StoredTrack {
         title: string;
         trackUrl: string;
         addedTimestamp: number;
+        genres: string[];
     };
 }
 
@@ -80,7 +82,9 @@ interface StoredTrack {
 //LASTFM_API_KEY
 //LASTFM_USERNAME
 //LASTFM_BASE
-let lastFmUrl = `${process.env.LASTFM_BASE}/?method=user.getrecenttracks&user=${process.env.LASTFM_USERNAME}&api_key=${process.env.LASTFM_API_KEY}&format=json&limit=1`
+// let lastFmUrl = `${process.env.LASTFM_BASE}/?method=user.getrecenttracks&user=${process.env.LASTFM_USERNAME}&api_key=${process.env.LASTFM_API_KEY}&format=json&limit=1`
+let lastFmUrl = `${process.env.LASTFM_BASE}/playback/now-playing`
+console.log(lastFmUrl)
 
 let trackId;
 setInterval(async () => {
@@ -95,10 +99,10 @@ setInterval(async () => {
         let json = JSON.parse((await readFile(trackFilePath, "utf-8")))
         json[data.id] = data
         await writeFile(trackFilePath, JSON.stringify(json), "utf-8")
+        if (client && client.isReady()) client.emit("newTrack", data)
     } catch (e) {
         console.log("Couldn't write to tracks.json")
     }
-    if (client && client.isReady()) client.emit("newTrack", data)
 }, 10000);
 
 app.get("/tracks/history/overlay", async (req, res) => {
@@ -112,13 +116,13 @@ app.get("/tracks/history", async (req, res) => {
         currentTrackId: trackId ? trackId : null
     }
     let file = await readFile(trackFilePath, "utf-8");
-    console.log(file)
+    // console.log(file)
     if (!file) {
         res.send(payload)
         return;
     }
     let json = JSON.parse(file);
-    console.log(json)
+    // console.log(json)
     if (!json) {
         res.send(payload)
         return;
@@ -130,6 +134,10 @@ app.get("/tracks/history", async (req, res) => {
 
 app.get("/cover/image", async (req, res) => {
     res.sendFile(path.join(__dirname, "/cover.html"));
+})
+
+app.get("/nowplaying/genres/overlay", async (req, res) => {
+    res.sendFile(path.join(__dirname, "/genres.html"))
 })
 
 app.get("/nowplaying/overlay", async (req, res) => {
@@ -196,31 +204,54 @@ app.get("/nowplaying", async (req, res): Promise<any> => {
             artist: "Playing",
             album: "Nothing Playing",
             title: "Nothing is",
-            imageUrl: "https://picsum.photos/150",
+            imageUrl: "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png",
             trackUrl: "https://ducky.wiki/trackNotFound",
             // nowplaying: true,
-            addedTimestamp: Date.now()
+            addedTimestamp: Date.now(),
+            genres: [],
         }
 
         res.send(trackData)
 
         return;
     }
-    if (!np.data.recenttracks) { res.sendStatus(404); return; }
+    if (np.data.status !== "ok") {
+        trackData = {
+            id: "0",
+            artist: "Playing",
+            album: "Nothing Playing",
+            title: "Nothing is",
+            imageUrl: "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png",
+            trackUrl: "https://ducky.wiki/trackNotFound",
+            // nowplaying: true,
+            addedTimestamp: Date.now(),
+            genres: []
+        }
+
+        res.send(trackData)
+
+        return;
+    }
     // res.send(np.data.recenttracks)
-    let firstTrack = np.data.recenttracks.track[0]
+    let firstTrack = np.data.info
 
     try {
         // if (firstTrack["@attr"]?.nowplaying) {
-        let songId = btoa(encodeURI(firstTrack.name))
+        // let songId = btoa(encodeURI(firstTrack.name))
+        let songId = firstTrack?.playParams.id
         trackData = {
             id: songId,
-            artist: firstTrack.artist['#text'] ? encodeURI(firstTrack.artist['#text']) : "Playing",
-            album: firstTrack.album["#text"] ? encodeURI(firstTrack.album["#text"]) : "Nothing Playing",
-            title: firstTrack.name ? encodeURI(firstTrack.name) : "Nothing is",
-            imageUrl: firstTrack.image.find(i => i.size === "extralarge")["#text"] ? firstTrack.image.find(i => i.size === "extralarge")["#text"] : "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png",
+            album: firstTrack.albumName ? encodeURI(firstTrack.albumName) : "Nothing Playing",
+            artist: firstTrack.artistName ? encodeURI(firstTrack.artistName) : "playing",
+            title: firstTrack.name ? encodeURI(firstTrack.name) : encodeURI("Nothing is"),
+            imageUrl: firstTrack.artwork.url ? firstTrack.artwork.url.replace(/\{w\}/gim, "512").replace(/\{h\}/gim, 512) : "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png",
             trackUrl: firstTrack.url ? firstTrack.url : "https://ducky.wiki/trackNotFound",
-            // nowplaying: true,
+            // artist: firstTrack.artist['#text'] ? encodeURI(firstTrack.artist['#text']) : "Playing",
+            // album: firstTrack.album["#text"] ? encodeURI(firstTrack.album["#text"]) : "Nothing Playing",
+            // title: firstTrack.name ? encodeURI(firstTrack.name) : "Nothing is",
+            // imageUrl: firstTrack.image.find(i => i.size === "extralarge")["#text"] ? firstTrack.image.find(i => i.size === "extralarge")["#text"] : "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png",
+            // trackUrl: firstTrack.url ? firstTrack.url : "https://ducky.wiki/trackNotFound",
+            genres: firstTrack.genreNames.length > 0 ? firstTrack.genreNames : [],
             addedTimestamp: Date.now()
         }
 
@@ -251,9 +282,10 @@ app.get("/nowplaying", async (req, res): Promise<any> => {
             artist: "Playing",
             album: "Nothing Playing",
             title: "Nothing is",
-            imageUrl: "https://picsum.photos/150",
+            imageUrl: "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png",
             trackUrl: "https://ducky.wiki/trackNotFound",
             // nowplaying: true,
+            genres: [],
             addedTimestamp: Date.now()
         })
         console.log("AXIOS", err)
@@ -261,11 +293,35 @@ app.get("/nowplaying", async (req, res): Promise<any> => {
 
 })
 
+const issues = [
+    { name: "Music Playback", value: "playback" }, { name: "Bot Commands", value: "commands" }, { name: "Stream/Overlays", value: "stream" }, { name: "Report a Song", value: "song" }
+]
+
 const discordCommands: ApplicationCommandData[] = [
     {
         name: "last5",
         description: "View the last 5 tracks played",
         type: ApplicationCommandType.ChatInput,
+    },
+    {
+        name: "somethingbroke",
+        description: "Report an issue with the system.",
+        type: ApplicationCommandType.ChatInput,
+        options: [
+            {
+                name: "what-broke",
+                description: "What is broken",
+                type: ApplicationCommandOptionType.String,
+                required: true,
+                choices: issues
+            },
+            {
+                name: "what-happened",
+                description: "Please describe the issue with as much detail as possible.",
+                type: ApplicationCommandOptionType.String,
+                required: true,
+            }
+        ]
     }
 ]
 
@@ -295,7 +351,7 @@ client.on("newTrack", (track: Track) => {
     console.log(track)
     let channelId = process.env.CHANNEL_ID as string;
     let channel: TextChannel = client.guilds.cache.get(process.env.GUILD_ID as string)?.channels.cache.get(channelId) as TextChannel
-    let container = new ContainerBuilder().addMediaGalleryComponents(new MediaGalleryBuilder().addItems([{ media: { url: track.imageUrl, width: 1024, height: 1024 } }])).addTextDisplayComponents(new TextDisplayBuilder().setContent([`## <a:RadioSpin:1341207082971693178> Now Playing`, `[**${decodeURI(track.title)}** — ${decodeURI(track.artist)}](${track.trackUrl})`].join("\n")))
+    let container = new ContainerBuilder().addMediaGalleryComponents(new MediaGalleryBuilder().addItems([{ media: { url: track.imageUrl, width: 1024, height: 1024 } }])).addTextDisplayComponents(new TextDisplayBuilder().setContent([`## <a:RadioSpin:1341207082971693178> Now Playing`, `[**${decodeURI(track.title)}** — ${decodeURI(track.artist)}](${track.trackUrl})`, "", "-# Hunted a bug? Let us know with </somethingbroke:1384060315066437715>!"].join("\n")))
     // .addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large))
     // .addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ducky Radio — vibe out :)`))
     channel.send({ flags: [MessageFlags.IsComponentsV2], components: [container] })
@@ -336,6 +392,22 @@ client.on("interactionCreate", async interaction => {
             interaction.reply({ flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral], components: [container] })
 
         }
+        if (interaction.commandName === "somethingbroke") {
+            let logChannel: TextChannel = client.guilds.cache.get(process.env.GUILD_ID as string)?.channels.cache.get(process.env.ADMIN_CHANNEL as string) as TextChannel
+            let issue = interaction.options.getString("what-broke", true)
+            let explanation = interaction.options.getString("what-happened", true)
+            let realIssue = issues.find(i => i.value === issue)?.name
+            let errorCon = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`## <@334392742266535957>, Something Broke\n${interaction.user.username} reported an issue regarding **${realIssue}** <t:${Math.floor(Date.now() / 1000)}:R>`)).addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large)).addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Issue Description\n\`\`\`${explanation}\`\`\``))
+
+            let currentTrack: Track = await (await axios.get("http://localhost:1234/nowplaying")).data
+            if (issue === "song" && currentTrack) {
+                let reportCon = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`## Song Report\n${interaction.user.username} reported the following track <t:${Math.floor(Date.now() / 1000)}:R>`)).addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large)).addSectionComponents(new SectionBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### [${decodeURI(currentTrack.title)} — ${decodeURI(currentTrack.artist)} [${decodeURI(currentTrack.album)}]](${currentTrack.trackUrl})`)).setThumbnailAccessory(new ThumbnailBuilder().setURL(currentTrack.imageUrl))).addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large)).addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Issue Description\n\`\`\`${explanation}\`\`\``))
+                logChannel.send({ flags: [MessageFlags.IsComponentsV2], components: [reportCon] })
+            } else {
+                logChannel.send({ flags: [MessageFlags.IsComponentsV2], components: [errorCon] })
+            }
+            interaction.reply({ content: `The ${issue === "song" ? "song" : "issue"} has been successfully reported${(issue === "song" && currentTrack) ? `\n\n**${decodeURI(currentTrack.title)} — ${decodeURI(currentTrack.artist)}**` : ""}`, flags: [MessageFlags.Ephemeral] })
+        }
 
     }
 })
@@ -363,9 +435,9 @@ client.on("interactionCreate", async interaction => {
 
 app.listen(process.env.PORT, async (er) => {
     console.log("LISTENING!")
-    let file = await readFile(trackFilePath, "utf-8")
-    if (!file) {
-        await writeFile(trackFilePath, JSON.stringify({}))
-    }
+    // let file = await readFile(trackFilePath, "utf-8")
+    // if (!file) {
+    //     await writeFile(trackFilePath, JSON.stringify({}))
+    // }
 })
 if (process.env.DISCORD_TOKEN && process.env.DISCORD_TOKEN !== "") { client.login(process.env.DISCORD_TOKEN) }
