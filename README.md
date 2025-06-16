@@ -1,5 +1,5 @@
 
-![Screenshot 1 (31)](https://github.com/user-attachments/assets/5f3ce219-dafe-4b5c-93a1-e003de2a0a62)
+![Screenshot 1 (32)](https://github.com/user-attachments/assets/d3b278a4-6e72-4b5f-ae2e-816d81391a0e)
 
 ## This is a web-based overlay.
 
