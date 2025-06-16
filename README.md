@@ -17,6 +17,6 @@ BASE URL: http://localhost:1234
 - Marquee - /nowplaying/overlay?inline=scroll
 - Genre Tracker - /nowplaying/genres/overlay
 - Last 5 Tracks - /tracks/history/overlay
-- Cover Art - /cover/image?corner=[square|round|circle]&size=[small(128px)|medium(512px)|large(1024px)]&spin=[true|false]
+- Cover Art - /cover/image?corner=[square|round|circle]&size=[small(128px)|medium(512px)|large(1024px)]&spin=[1-Clockwise|2-CounterClockwise]
 
 [Cider Collective](https://cider.sh)
