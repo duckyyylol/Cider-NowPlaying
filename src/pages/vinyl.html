@@ -40,15 +40,15 @@
           transform: translateY(0);
         }
         to {
-          transform: translateY(-6000px);
+          transform: translateY(-6000px) rotateX(270deg);
         }
       }
       @keyframes loadIn {
         from {
-          transform: translateY(-6000px);
+          transform: translateY(-6000px) rotateX(270deg);
         }
         to {
-          transform: translateY(0);
+          transform: translateY(0) rotateX(0deg);
         }
       }
       body {
@@ -56,6 +56,7 @@
         margin: 0;
       }
       .vinyl {
+        transform: rotateX(10deg);
         animation-fill-mode: forwards;
         /* animation: rotating 10s linear infinite; */
       }
@@ -64,6 +65,9 @@
         position: absolute;
         top: 0%;
         left: 0%;
+        /* border: 13px solid rgba(255, 155, 42, 0.2); */
+        border-radius: 500px;
+        margin: 0;
         /* animation: rotating 10s linear infinite; */
       }
       .plug {

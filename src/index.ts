@@ -1,13 +1,14 @@
 import express from "express";
 import "dotenv/config"
 import path, { join } from "path";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { randomUUID } from "crypto";
 import "discord.js"
 import { ApplicationCommandData, ApplicationCommandOptionType, ApplicationCommandType, AttachmentBuilder, Client, ContainerBuilder, IntentsBitField, MediaGalleryBuilder, Message, MessageFlags, PermissionFlagsBits, SectionBuilder, SeparatorSpacingSize, TextChannel, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import { count } from "console";
 import { readFile, writeFile } from "fs/promises";
 import Cider, { Endpoints, URLTypes } from "./Cider";
+import qs from "qs";
 // import Cider from "./Cider";
 console.log(process.cwd())
 
@@ -88,11 +89,47 @@ interface StoredTrack {
 let lastFmUrl = `${process.env.LASTFM_BASE}/playback/now-playing`
 console.log(lastFmUrl)
 
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
+
 let trackId;
+async function heartbeat() {
+    let isPlaying = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.IS_PLAYING))
+    await console.log("[HEARTBEAT] Check 1 - ", isPlaying)
+    await delay(10000)
+    isPlaying = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.IS_PLAYING))
+    await console.log("[HEARTBEAT] Check 2 - ", isPlaying)
+    if (!isPlaying || !isPlaying.is_playing || isPlaying.status !== "ok") {
+        //fail - try to play
+        console.log("[HEARTBEAT] Playback lost - Attempting to restore.")
+        console.log(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_PAUSE))
+        try {
+            let r = await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_PAUSE), {}, { headers: { "apptoken": process.env.CIDER_TOKEN } })
+            console.log((r?.status))
+            let i = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.IS_PLAYING))
+            if (i.is_playing) {
+                console.log("[HEARTBEAT] Restored Playback")
+            } else {
+                console.log("[HEARTBEAT] First attempt failed - Attempting to enable autoplay")
+                let r = await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.PLAY_HREF), { "href": "/v1/catalog/us/stations/ra.u-0175e52d7cfcd6031abb70ff757aa95f" }, { headers: { "apptoken": process.env.CIDER_TOKEN } })
+                if (r.status === 200) {
+                    await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_AUTOPLAY))
+                    console.log("[HEARTBEAT] Attempting mission autoplay")
+                }
+
+            }
+
+        } catch (e: AxiosError | any) {
+            console.log((e as AxiosError).status)
+            console.log("[HEARTBEAT] Failed to restore playback")
+        }
+    }
+}
 setInterval(async () => {
+    heartbeat();
     let { data }: any = await axios.get("http://localhost:1234/nowplaying") as any
     if (!data) return;
-    console.log("INCOMING | CURRENT")
+    // console.log("INCOMING | CURRENT")
     console.log(data.id + " / " + trackId)
     if (trackId && trackId === data.id) return;
     if (data.id === "0" || data.title === "Nothing is") return;
@@ -261,7 +298,7 @@ app.get("/nowplaying", async (req, res): Promise<any> => {
     try {
         // if (firstTrack["@attr"]?.nowplaying) {
         // let songId = btoa(encodeURI(firstTrack.name))
-        console.log(firstTrack.playParams)
+        // console.log(firstTrack.playParams)
         let songId = firstTrack?.playParams.id
         trackData = {
             id: songId ? songId : "0",
@@ -355,6 +392,9 @@ const discordCommands: ApplicationCommandData[] = [
     }
 ]
 
+
+
+
 client.on("ready", async (c) => {
     console.log(client.user?.username)
     client.application?.commands.set(discordCommands).then(r => {
@@ -381,7 +421,7 @@ client.on("newTrack", (track: Track) => {
     console.log(track)
     let channelId = process.env.CHANNEL_ID as string;
     let channel: TextChannel = client.guilds.cache.get(process.env.GUILD_ID as string)?.channels.cache.get(channelId) as TextChannel
-    let container = new ContainerBuilder().addMediaGalleryComponents(new MediaGalleryBuilder().addItems([{ media: { url: track.imageUrl, width: 1024, height: 1024 } }])).addTextDisplayComponents(new TextDisplayBuilder().setContent([`## <a:RadioSpin:1341207082971693178> Now Playing`, `[**${decodeURI(track.title)}** — ${decodeURI(track.artist)}](${track.trackUrl})`, "", "-# Hunted a bug? Let us know with </somethingbroke:1384060315066437715>!"].join("\n")))
+    let container = new ContainerBuilder().addMediaGalleryComponents(new MediaGalleryBuilder().addItems([{ media: { url: track.imageUrl, width: 1024, height: 1024 } }])).addTextDisplayComponents(new TextDisplayBuilder().setContent([`## <a:RadioSpin:1341207082971693178> Now Playing`, `[**${decodeURI(track.title)}** — ${decodeURI(track.artist)}](${track.trackUrl})`, "", "-# This system is currently running unsupervised. Report any bugs or inappropriate tracks with </somethingbroke:1384060315066437715>!"].join("\n")))
     // .addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large))
     // .addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ducky Radio — vibe out :)`))
     channel.send({ flags: [MessageFlags.IsComponentsV2], components: [container] })

@@ -33,6 +33,7 @@ export enum Endpoints {
     SET_VOLUME = "/volume", //Requires {volume: number}
     SET_RATING = "/set-rating", //Requires {rating: -1 | 0 | 1}
     PLAY_URL = "/play-url", //Requires AM URL in request body
+    PLAY_HREF = "/play-item-href", //Requires AM href in request body
     PLAY_LATER_ID = "/play-later", //Requires {id: string, type: "song"}
     PLAY_NEXT_ID = "/play-next", //Requires {id: string, type: "song"}
     TOGGLE_REPEAT = "/toggle-repeat",
