@@ -38,4 +38,4 @@ This overlay comes with a built-in Discord client to send now playing messages t
 - Users can report the current track using /somethingbroke. A successful report will skip the current track.
 - (WIP) Cider API Wrapper
 
-Special thanks to [Cider Collective](https://cider.sh). This project is not affiliated with Cider Collective
+Special thanks to [Cider Collective](https://cider.sh). [@ciderapp](https://github.com/ciderapp/) This project is not affiliated with Cider Collective
