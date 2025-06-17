@@ -8,6 +8,7 @@ import { ApplicationCommandData, ApplicationCommandOptionType, ApplicationComman
 import { count } from "console";
 import { readFile, writeFile } from "fs/promises";
 import Cider, { Endpoints, URLTypes } from "./Cider";
+import { setTimeout as wait } from "timers/promises";
 import qs from "qs";
 // import Cider from "./Cider";
 console.log(process.cwd())
@@ -95,35 +96,38 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 let trackId;
 async function heartbeat() {
     let isPlaying = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.IS_PLAYING))
-    await console.log("[HEARTBEAT] Check 1 - ", isPlaying)
-    await delay(10000)
-    isPlaying = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.IS_PLAYING))
-    await console.log("[HEARTBEAT] Check 2 - ", isPlaying)
-    if (!isPlaying || !isPlaying.is_playing || isPlaying.status !== "ok") {
-        //fail - try to play
-        console.log("[HEARTBEAT] Playback lost - Attempting to restore.")
-        console.log(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_PAUSE))
-        try {
-            let r = await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_PAUSE), {}, { headers: { "apptoken": process.env.CIDER_TOKEN } })
-            console.log((r?.status))
-            let i = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.IS_PLAYING))
-            if (i.is_playing) {
-                console.log("[HEARTBEAT] Restored Playback")
-            } else {
-                console.log("[HEARTBEAT] First attempt failed - Attempting to enable autoplay")
-                let r = await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.PLAY_HREF), { "href": "/v1/catalog/us/stations/ra.u-0175e52d7cfcd6031abb70ff757aa95f" }, { headers: { "apptoken": process.env.CIDER_TOKEN } })
-                if (r.status === 200) {
-                    await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_AUTOPLAY))
-                    console.log("[HEARTBEAT] Attempting mission autoplay")
+    console.log("[HEARTBEAT] Check 1 - ", isPlaying)
+    setTimeout(async () => {
+
+        isPlaying = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.IS_PLAYING))
+
+        console.log("[HEARTBEAT] Check 2 - ", isPlaying)
+        if (!isPlaying || !isPlaying.is_playing || isPlaying.status !== "ok") {
+            //fail - try to play
+            console.log("[HEARTBEAT] Playback lost - Attempting to restore.")
+            console.log(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_PAUSE))
+            try {
+                let r = await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_PAUSE), {}, { headers: { "apptoken": process.env.CIDER_TOKEN } })
+                console.log((r?.status))
+                let i = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.IS_PLAYING))
+                if (i.is_playing) {
+                    console.log("[HEARTBEAT] Restored Playback")
+                } else {
+                    console.log("[HEARTBEAT] First attempt failed - Attempting to enable autoplay")
+                    let r = await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.PLAY_HREF), { "href": "/v1/catalog/us/stations/ra.u-0175e52d7cfcd6031abb70ff757aa95f" }, { headers: { "apptoken": process.env.CIDER_TOKEN } })
+                    if (r.status === 200) {
+                        await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_AUTOPLAY))
+                        console.log("[HEARTBEAT] Attempting mission autoplay")
+                    }
+
                 }
 
+            } catch (e: AxiosError | any) {
+                console.log((e as AxiosError).status)
+                console.log("[HEARTBEAT] Failed to restore playback")
             }
-
-        } catch (e: AxiosError | any) {
-            console.log((e as AxiosError).status)
-            console.log("[HEARTBEAT] Failed to restore playback")
         }
-    }
+    }, 750)
 }
 setInterval(async () => {
     heartbeat();
@@ -421,7 +425,7 @@ client.on("newTrack", (track: Track) => {
     console.log(track)
     let channelId = process.env.CHANNEL_ID as string;
     let channel: TextChannel = client.guilds.cache.get(process.env.GUILD_ID as string)?.channels.cache.get(channelId) as TextChannel
-    let container = new ContainerBuilder().addMediaGalleryComponents(new MediaGalleryBuilder().addItems([{ media: { url: track.imageUrl, width: 1024, height: 1024 } }])).addTextDisplayComponents(new TextDisplayBuilder().setContent([`## <a:RadioSpin:1341207082971693178> Now Playing`, `[**${decodeURI(track.title)}** — ${decodeURI(track.artist)}](${track.trackUrl})`, "", "-# This system is currently running unsupervised. Report any bugs or inappropriate tracks with </somethingbroke:1384060315066437715>!"].join("\n")))
+    let container = new ContainerBuilder().addMediaGalleryComponents(new MediaGalleryBuilder().addItems([{ media: { url: track.imageUrl, width: 1024, height: 1024 } }])).addTextDisplayComponents(new TextDisplayBuilder().setContent([`## <a:RadioSpin:1341207082971693178> Now Playing`, `[**${decodeURI(track.title)}** — ${decodeURI(track.artist)}](${track.trackUrl})`, "", "-# This system is currently running unsupervised.\nReport any bugs or inappropriate tracks with </somethingbroke:1384060315066437715>!"].join("\n")))
     // .addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large))
     // .addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ducky Radio — vibe out :)`))
     channel.send({ flags: [MessageFlags.IsComponentsV2], components: [container] })
@@ -469,14 +473,22 @@ client.on("interactionCreate", async interaction => {
             let realIssue = issues.find(i => i.value === issue)?.name
             let errorCon = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`## <@334392742266535957>, Something Broke\n${interaction.user.username} reported an issue regarding **${realIssue}** <t:${Math.floor(Date.now() / 1000)}:R>`)).addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large)).addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Issue Description\n\`\`\`${explanation}\`\`\``))
 
+            let skipped = false;
             let currentTrack: Track = await (await axios.get("http://localhost:1234/nowplaying")).data
             if (issue === "song" && currentTrack) {
+                try {
+                    let r = await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.SKIP), {}, { headers: { "apptoken": process.env.CIDER_TOKEN } })
+                    if (r.status === 200) skipped = true;
+                } catch (er) {
+                    console.log("Failed to skip reported track", currentTrack)
+                }
                 let reportCon = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`## Song Report\n${interaction.user.username} reported the following track <t:${Math.floor(Date.now() / 1000)}:R>`)).addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large)).addSectionComponents(new SectionBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`### [${decodeURI(currentTrack.title)} — ${decodeURI(currentTrack.artist)} [${decodeURI(currentTrack.album)}]](${currentTrack.trackUrl})`)).setThumbnailAccessory(new ThumbnailBuilder().setURL(currentTrack.imageUrl))).addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large)).addTextDisplayComponents(new TextDisplayBuilder().setContent(`### Issue Description\n\`\`\`${explanation}\`\`\``))
                 logChannel.send({ flags: [MessageFlags.IsComponentsV2], components: [reportCon] })
+                logChannel.send({ flags: [MessageFlags.IsComponentsV2], components: [errorCon] })
             } else {
                 logChannel.send({ flags: [MessageFlags.IsComponentsV2], components: [errorCon] })
             }
-            interaction.reply({ content: `The ${issue === "song" ? "song" : "issue"} has been successfully reported${(issue === "song" && currentTrack) ? `\n\n**${decodeURI(currentTrack.title)} — ${decodeURI(currentTrack.artist)}**` : ""}`, flags: [MessageFlags.Ephemeral] })
+            interaction.reply({ content: `The ${issue === "song" ? "song" : "issue"} has been successfully reported${(issue === "song" && currentTrack) ? `\n\n**${decodeURI(currentTrack.title)} — ${decodeURI(currentTrack.artist)}**\n\n${skipped ? `This track has been skipped.` : ""}` : ""}`, flags: [MessageFlags.Ephemeral] })
         }
         if (interaction.commandName === "queue") {
             let queue = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.QUEUE))
