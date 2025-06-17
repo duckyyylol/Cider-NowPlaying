@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <style>
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Black.woff2') format('woff2'), url('CobblerSans-Black.woff') format('woff');
+        font-weight: 900;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Light.woff2') format('woff2'), url('CobblerSans-Light.woff') format('woff');
+        font-weight: 300;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-SemiBold.woff2') format('woff2'), url('CobblerSans-SemiBold.woff') format('woff');
+        font-weight: 600;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Medium.woff2') format('woff2'), url('CobblerSans-Medium.woff') format('woff');
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Bold.woff2') format('woff2'), url('CobblerSans-Bold.woff') format('woff');
+        font-weight: bold;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Regular.woff2') format('woff2'), url('CobblerSans-Regular.woff') format('woff');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+      }
+      * {
+        font-family: 'Cobbler Sans';
+        color: white;
+        text-overflow: ellipsis;
+      }
+      .pretty-container {
+        width: auto;
+        max-width: 400px;
+        min-width: 200px;
+        /* width: auto; */
+        height: 75px;
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        background-color: rgba(17, 17, 17, 0.7);
+        box-shadow: 0px 0px 1.975px 1.185px rgba(33, 33, 33, 0.36) inset, 0px 0px 7.898px 0px rgba(0, 0, 0, 0.56);
+        gap: 1em;
+        padding: 0.3em;
+        font-size: 0.8em;
+        text-overflow: ellipsis;
+      }
+
+      /* .songDetails {
+        width: 100%;
+        height: 50px;
+      }
+
+      .title,
+      .attr,
+      .artist {
+        /* width: 100vw; */
+      /* overflow: hidden; 
+      } */
+
+      .image img {
+        width: 50px;
+        border-radius: 0.4em;
+        margin-left: 1em;
+      }
+
+      /* .songDetails {
+
+      } */
+
+      .songDetails .song {
+        font-weight: bold;
+      }
+
+      .top {
+        border-radius: 0.8em 0.8em 0 0;
+      }
+
+      .mid {
+        border-radius: 0;
+      }
+
+      .low {
+        border-radius: 0 0 0.8em 0.8em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="list"></div>
+
+    <script>
+      let listContainer = document.querySelector('.list');
+      //     let songImage = document.querySelector('#songImage');
+      //   let songTitle = document.querySelector('.title');
+      //   let songArtist = document.querySelector('.artist');
+      //   let songAlbum = document.querySelector('.album');
+
+      function fetchTracks() {
+        let trackList = [];
+        // trackList = [];
+        fetch('/tracks/history').then(r =>
+          r.json().then(res => {
+            //   let { data } = res;
+            let run = 0;
+            let tracks = res.data;
+            let currentTrackId = res.currentTrackId;
+            // if (currentTrackId === Object.entries(tracks).sort((a, b) => b[1].addedTimestamp - a[1].addedTimestamp)[0][0]) return;
+            // listContainer.childNodes.forEach(node => listContainer.removeChild(node));
+            //   console.log(tracks);
+            //   console.log('CURRENT TRACK', currentTrackId);
+            Object.entries(tracks)
+              .sort((a, b) => b[1].addedTimestamp - a[1].addedTimestamp)
+              .forEach((entry, index) => {
+                //   console.log(entry);
+                if (currentTrackId && currentTrackId === entry[0]) return;
+                if (entry[0].toString() === '0') return;
+                let track = entry[1];
+                //   console.log(index, track.addedTimestamp, track.id);
+                if (trackList.length < 5) trackList.push(track);
+              });
+            trackList.forEach((track, index) => {
+              console.log(track.title);
+              let elem = document.createElement('div');
+              elem.classList.add('pretty-container');
+              // elem.classList.add(index === 0 ? "top" ? index === (trackList.length - 1) ? "low" : "mid")
+              if (index === 0) elem.classList.add('top');
+              if (index === trackList.length - 1) elem.classList.add('low');
+              if (!elem.classList.contains('top') && !elem.classList.contains('low')) elem.classList.add('mid');
+              elem.innerHTML = `<div class="image">
+          <img src="${track.imageUrl}" alt="" id="songImage" />
+        </div>
+        <div class="songDetails">
+          <h2 class="song">
+            <span class="title">${decodeURI(track.title)}</span> <span class="attr"> — <span class="artist" style="width: 100%; text-overflow: ellipsis">${decodeURI(track.artist)}</span></span>
+          </h2>
+        </div>`;
+
+              console.log(elem);
+              if (listContainer.children.length >= 5) {
+                listContainer.replaceChildren(elem);
+                return;
+              }
+              listContainer.append(elem);
+            });
+          })
+        );
+        console.log(trackList);
+      }
+
+      setInterval(fetchTracks, 2000);
+    </script>
+  </body>
+</html>

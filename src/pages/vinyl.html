@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vinyl Overlay</title>
+
+    <style>
+      @-webkit-keyframes rotating /* Safari and Chrome */ {
+        from {
+          -webkit-transform: rotate(0deg);
+          -o-transform: rotate(0deg);
+          transform: rotate(0deg);
+        }
+        to {
+          -webkit-transform: rotate(360deg);
+          -o-transform: rotate(360deg);
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes rotating {
+        from {
+          -ms-transform: rotate(0deg);
+          -moz-transform: rotate(0deg);
+          -webkit-transform: rotate(0deg);
+          -o-transform: rotate(0deg);
+          transform: rotate(0deg);
+        }
+        to {
+          -ms-transform: rotate(360deg);
+          -moz-transform: rotate(360deg);
+          -webkit-transform: rotate(360deg);
+          -o-transform: rotate(360deg);
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes loadOut {
+        from {
+          transform: translateY(0);
+        }
+        to {
+          transform: translateY(-6000px);
+        }
+      }
+      @keyframes loadIn {
+        from {
+          transform: translateY(-6000px);
+        }
+        to {
+          transform: translateY(0);
+        }
+      }
+      body {
+        padding: 0;
+        margin: 0;
+      }
+      .vinyl {
+        animation-fill-mode: forwards;
+        /* animation: rotating 10s linear infinite; */
+      }
+      #record {
+        z-index: -1;
+        position: absolute;
+        top: 0%;
+        left: 0%;
+        /* animation: rotating 10s linear infinite; */
+      }
+      .plug {
+        z-index: 3;
+        position: absolute;
+        top: calc(592.368px / 2.1);
+        left: calc(592.368px / 2.1);
+        /* animation: rotating 10s linear infinite; */
+      }
+      .cover {
+        z-index: 2;
+        position: absolute;
+        width: 296.184px;
+        height: 296.184px;
+        border-radius: 200px;
+        top: calc(592.368px / 3.8);
+        left: calc(592.368px / 3.8);
+        animation: rotating 10s linear infinite;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="vinyl">
+      <img src="../static/vinylmiddle.png" alt="" class="plug" />
+      <img src="../static/ducky.gif" alt="" class="cover" />
+
+      <svg id="record" width="609" height="609" viewBox="0 0 609 609" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g filter="url(#filter0_ddi_536_542)">
+          <rect x="8" y="8" width="592.368" height="592.368" rx="296.184" fill="#111111" />
+        </g>
+        <g filter="url(#filter1_di_536_542)">
+          <rect x="37.6184" y="37.6184" width="533.131" height="533.131" rx="266.566" fill="#111111" />
+        </g>
+        <g filter="url(#filter2_di_536_542)">
+          <rect x="67.2368" y="67.2366" width="473.894" height="473.894" rx="236.947" fill="#111111" />
+        </g>
+        <g filter="url(#filter3_di_536_542)">
+          <rect x="96.8552" y="96.855" width="414.658" height="414.658" rx="207.329" fill="#111111" />
+        </g>
+        <g filter="url(#filter4_dif_536_542)">
+          <rect x="126.473" y="126.474" width="355.421" height="355.421" rx="177.71" fill="#111111" fill-opacity="0.7" shape-rendering="crispEdges" />
+        </g>
+        <rect x="156.092" y="156.092" width="296.184" height="296.184" rx="148.092" fill="white" fill-opacity="0.2" />
+        <defs>
+          <filter id="filter0_ddi_536_542" x="0.101762" y="0.101762" width="608.165" height="608.266" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix" />
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+            <feOffset />
+            <feGaussianBlur stdDeviation="3.94912" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.56 0" />
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_536_542" />
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+            <feOffset dy="4" />
+            <feGaussianBlur stdDeviation="2" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+            <feBlend mode="normal" in2="effect1_dropShadow_536_542" result="effect2_dropShadow_536_542" />
+            <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_536_542" result="shape" />
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+            <feMorphology radius="1.18474" operator="erode" in="SourceAlpha" result="effect3_innerShadow_536_542" />
+            <feOffset />
+            <feGaussianBlur stdDeviation="0.98728" />
+            <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0.36 0" />
+            <feBlend mode="normal" in2="shape" result="effect3_innerShadow_536_542" />
+          </filter>
+          <filter id="filter1_di_536_542" x="29.7202" y="29.7202" width="548.928" height="548.928" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix" />
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+            <feOffset />
+            <feGaussianBlur stdDeviation="3.94912" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.56 0" />
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_536_542" />
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_536_542" result="shape" />
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+            <feMorphology radius="1.18474" operator="erode" in="SourceAlpha" result="effect2_innerShadow_536_542" />
+            <feOffset />
+            <feGaussianBlur stdDeviation="0.98728" />
+            <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0.36 0" />
+            <feBlend mode="normal" in2="shape" result="effect2_innerShadow_536_542" />
+          </filter>
+          <filter id="filter2_di_536_542" x="59.3386" y="59.3383" width="489.691" height="489.691" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix" />
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+            <feOffset />
+            <feGaussianBlur stdDeviation="3.94912" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.56 0" />
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_536_542" />
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_536_542" result="shape" />
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+            <feMorphology radius="1.18474" operator="erode" in="SourceAlpha" result="effect2_innerShadow_536_542" />
+            <feOffset />
+            <feGaussianBlur stdDeviation="0.98728" />
+            <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0.36 0" />
+            <feBlend mode="normal" in2="shape" result="effect2_innerShadow_536_542" />
+          </filter>
+          <filter id="filter3_di_536_542" x="88.957" y="88.9567" width="430.454" height="430.454" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix" />
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+            <feOffset />
+            <feGaussianBlur stdDeviation="3.94912" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.56 0" />
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_536_542" />
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_536_542" result="shape" />
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+            <feMorphology radius="1.18474" operator="erode" in="SourceAlpha" result="effect2_innerShadow_536_542" />
+            <feOffset />
+            <feGaussianBlur stdDeviation="0.98728" />
+            <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0.36 0" />
+            <feBlend mode="normal" in2="shape" result="effect2_innerShadow_536_542" />
+          </filter>
+          <filter id="filter4_dif_536_542" x="121.734" y="121.735" width="364.899" height="364.899" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix" />
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+            <feOffset />
+            <feGaussianBlur stdDeviation="2.36947" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.56 0" />
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_536_542" />
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_536_542" result="shape" />
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+            <feMorphology radius="2.36947" operator="erode" in="SourceAlpha" result="effect2_innerShadow_536_542" />
+            <feOffset />
+            <feGaussianBlur stdDeviation="0.592368" />
+            <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0.36 0" />
+            <feBlend mode="normal" in2="shape" result="effect2_innerShadow_536_542" />
+            <feGaussianBlur stdDeviation="0.592368" result="effect3_foregroundBlur_536_542" />
+          </filter>
+        </defs>
+      </svg>
+    </div>
+
+    <script>
+      let delay = ms => new Promise(res => setTimeout(res, ms));
+      let vinyl = document.querySelector('.vinyl');
+      let cover = document.querySelector('.cover');
+      let id;
+      function fetchNowPlaying() {
+        fetch('/nowplaying').then(r =>
+          r.json().then(async res => {
+            if (res.id !== '0') {
+              if (id && id === res.id) return;
+              if (!id || id !== res.id) {
+                console.log('new track');
+                vinyl.style.animation = 'loadOut 2s ease forwards';
+                await delay(1000);
+                cover.setAttribute('src', res.imageUrl);
+                await delay(1000);
+                vinyl.style.animation = 'loadIn 2s ease forwards';
+                id = res.id;
+              }
+              console.log(id);
+            }
+          })
+        );
+        // fetch('/tracks/history').then(r =>
+        //   r.json().then(res => {
+        //     if (res.currentTrackId) id = res.currentTrackId;
+        //   })
+        // );
+      }
+
+      setInterval(fetchNowPlaying, 3000);
+
+      // vinyl.style.animation = 'loadOut 2s ease forwards'; -- OUT
+      // vinyl.style.animation = 'loadIn 2s ease forwards'; -- IN
+    </script>
+  </body>
+</html>

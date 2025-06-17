@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cover Image</title>
+  </head>
+  <body>
+    <style>
+      body {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+      @-webkit-keyframes rotating /* Safari and Chrome */ {
+        from {
+          -webkit-transform: rotate(0deg);
+          -o-transform: rotate(0deg);
+          transform: rotate(0deg);
+        }
+        to {
+          -webkit-transform: rotate(360deg);
+          -o-transform: rotate(360deg);
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes rotating {
+        from {
+          -ms-transform: rotate(0deg);
+          -moz-transform: rotate(0deg);
+          -webkit-transform: rotate(0deg);
+          -o-transform: rotate(0deg);
+          transform: rotate(0deg);
+        }
+        to {
+          -ms-transform: rotate(360deg);
+          -moz-transform: rotate(360deg);
+          -webkit-transform: rotate(360deg);
+          -o-transform: rotate(360deg);
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+    <img src="" alt="" class="cover" />
+    <script>
+      let trackId = null;
+
+      let typeParam = new URLSearchParams(location.search).get('corner');
+      let type;
+      if (!typeParam) type = 'round';
+      //   if (typeParam) type = 'circle';
+      if (typeParam === 'round' || typeParam === 'r') type = 'round';
+      if (typeParam === 'circle' || typeParam === 'c') type = 'circle';
+      if (typeParam === 'square' || typeParam === 's') type = 'square';
+      let sizeParam = new URLSearchParams(location.search).get('size');
+      let size;
+      if (!sizeParam) size = 'medium';
+      //   if (typeParam) type = 'circle';
+      if (sizeParam === 'small' || sizeParam === 's' || sizeParam === '128') size = 'small';
+      if (sizeParam === 'medium' || sizeParam === 'm' || sizeParam === '512') size = 'medium';
+      if (sizeParam === 'large' || sizeParam === 'l' || sizeParam === '1024') size = 'large';
+      let spin = 'n';
+      let spinParam = new URLSearchParams(location.search).get('spin');
+      if (!spinParam) spin = 'n';
+      if (spinParam === '1') spin = 'f';
+      if (spinParam === '2') spin = 'r';
+
+      console.log(size);
+      let rOpts = {
+        'round': '12px',
+        'circle': '500px',
+        'square': '0',
+      };
+      let sOpts = {
+        'small': '128px',
+        'medium': '512px',
+        'large': '1024px',
+      };
+
+      let radius = rOpts[type];
+      let dimensions = sOpts[size];
+      let image = document.querySelector('.cover');
+      image.style.width = dimensions;
+      image.style.height = dimensions;
+      image.style.borderRadius = radius;
+
+      function fetchTrack() {
+        fetch('/nowplaying').then(r =>
+          r.json().then(track => {
+            if (!track.id || track.id === trackId) return;
+            trackId = track.id;
+
+            if (track.imageUrl) image.setAttribute('src', track.imageUrl);
+            if (!spin || spin === 'n') image.style.animation = 'none';
+            if (spin !== 'n') image.style.animation = 'rotating 10s linear infinite';
+            if (spin !== 'n') image.style.animationDirection = spin === 'f' ? 'normal' : 'reverse';
+            //
+            // if (spin)
+          })
+        );
+      }
+
+      //   window.onload(() => fetchTrack());
+
+      setInterval(fetchTrack, 2000);
+      //   image.attributes.setNamedItem("src", )
+    </script>
+  </body>
+</html>

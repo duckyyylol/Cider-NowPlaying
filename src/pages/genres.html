@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Genre Tags</title>
+
+    <style>
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Black.woff2') format('woff2'), url('CobblerSans-Black.woff') format('woff');
+        font-weight: 900;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Light.woff2') format('woff2'), url('CobblerSans-Light.woff') format('woff');
+        font-weight: 300;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-SemiBold.woff2') format('woff2'), url('CobblerSans-SemiBold.woff') format('woff');
+        font-weight: 600;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Medium.woff2') format('woff2'), url('CobblerSans-Medium.woff') format('woff');
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Bold.woff2') format('woff2'), url('CobblerSans-Bold.woff') format('woff');
+        font-weight: bold;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: 'Cobbler Sans';
+        src: url('CobblerSans-Regular.woff2') format('woff2'), url('CobblerSans-Regular.woff') format('woff');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      .list {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        height: fit-content;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 1em;
+      }
+
+      .genre {
+        height: fit-content;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        border-radius: 0.8em;
+        padding: 0.25em 1em;
+        font-size: 0.8em;
+        letter-spacing: 0.1em;
+        font-family: 'Cobbler Sans';
+        /* background-color: #000; */
+        background: linear-gradient(236deg, rgba(222, 78, 0, 0.6) 11.93%, rgba(255, 155, 42, 0.6) 85%);
+
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="list"></div>
+
+    <script>
+      const list = document.querySelector('.list');
+      function fetchTrack() {
+        let elems = [];
+        fetch('/nowplaying').then(r =>
+          r.json().then(res => {
+            let genres = res.genres;
+            if (genres.length <= 0) {
+              let elem = document.createElement('div');
+              elem.classList.add('genre');
+              elem.innerHTML = `
+        <h2 class="genre-text">Random</h2>
+      `;
+
+              elems.push(elem);
+            }
+            genres.forEach(genre => {
+              let elem = document.createElement('div');
+              elem.classList.add('genre');
+              elem.innerHTML = `
+        <h2 class="genre-text">${genre}</h2>
+      `;
+
+              elems.push(elem);
+            });
+
+            list.replaceChildren(...elems);
+          })
+        );
+      }
+
+      setInterval(fetchTrack, 2000);
+    </script>
+  </body>
+</html>
