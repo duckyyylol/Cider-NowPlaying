@@ -54,6 +54,8 @@
         font-display: swap;
       }
 
+      @import url('https://fonts.googleapis.com/css2?family=Markazi+Text:wght@400..700&display=swap');
+
       body {
         margin: 0;
         padding: 0;
@@ -72,7 +74,7 @@
         flex-wrap: nowrap;
         align-items: center;
         justify-content: flex-start;
-        background: linear-gradient(236deg, rgba(222, 78, 0, 0.6) 11.93%, rgba(255, 155, 42, 0.6) 85.2%);
+        /* background: linear-gradient(236deg, rgba(222, 78, 0, 0.6) 11.93%, rgba(255, 155, 42, 0.6) 85.2%); */
         background-origin: content-box;
         padding: 3px;
       }
@@ -223,6 +225,30 @@
         font-weight: 300;
         opacity: 0.8;
       }
+
+      .et {
+        margin: auto;
+        font-family: 'Markazi Text' !important;
+        border-radius: 15px !important;
+        background-color: rgba(0, 0, 0, 0.596) !important;
+        padding: 15px;
+        width: fit-content !important;
+        line-height: 0;
+      }
+
+      .et .var1 {
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      .et .var2 {
+        font-weight: 400;
+      }
+
+      .et .var3 {
+        font-weight: 400;
+        color: rgb(179, 179, 179);
+      }
     </style>
   </head>
   <body>
@@ -268,6 +294,7 @@
       if (!typeParam) type = 'pretty';
       if (typeParam) type = 'inline';
       if (typeParam === 'scroll') type = 'scroll';
+      if (typeParam === 'et') type = 'et';
       console.log(type);
 
       let trackId = null;
@@ -275,7 +302,8 @@
       function fetchTrack() {
         fetch('/nowplaying').then(r =>
           r.json().then(track => {
-            if (!track.id || track.id === trackId) return;
+            if (trackId && track.id === trackId) return;
+            if (track.id && track.id === '0') return;
             trackId = track.id;
 
             if (type === 'pretty') {
@@ -302,6 +330,12 @@
               inlineContainer.style.width = 'auto';
               //   inlineContainer.style.height = '50px';
               //   inlineDetails.style.textwrap = 'none';
+            } else if (type === 'et') {
+              if (decodeURI(track.title).toLowerCase().includes('nothing is')) return;
+              prettyContainer.style.display = 'none';
+              inlineContainer.classList.add('et');
+              // inlineDetails.classList.add('et');
+              inlineDetails.innerHTML = `<span class="var1">NOW PLAYING:</span> <span class="var2">${decodeURI(track.title)}</span><span class="var3"> — ${decodeURI(track.artist)}</span>`;
             }
           })
         );

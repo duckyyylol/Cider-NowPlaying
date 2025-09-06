@@ -1,4 +1,4 @@
-import express from "express";
+import express, { json } from "express";
 import "dotenv/config"
 import path, { join } from "path";
 import axios, { AxiosError } from "axios";
@@ -9,15 +9,17 @@ import { count } from "console";
 import { readFile, writeFile } from "fs/promises";
 import Cider, { Endpoints, URLTypes } from "./Cider";
 import { setTimeout as wait } from "timers/promises";
+import RPC from "discord-rpc"
 import qs from "qs";
 // import Cider from "./Cider";
 console.log(process.cwd())
+import cors from "cors"
 
 
 let trackFilePath = join(__dirname, "/tracks.json");
 
 const app = express();
-const client: Client = new Client({
+let client: Client = new Client({
     intents: [IntentsBitField.Flags.MessageContent,
     IntentsBitField.Flags.Guilds,
     IntentsBitField.Flags.GuildMembers,
@@ -63,6 +65,7 @@ interface Track {
     // nowplaying: boolean;
     addedTimestamp: number;
     genres: string[];
+    duration: number;
 
 }
 
@@ -76,8 +79,31 @@ interface StoredTrack {
         trackUrl: string;
         addedTimestamp: number;
         genres: string[];
+        duration: number;
     };
 }
+
+enum PlaybackType {
+    MANUAL = "MANUAL",
+    MANAGED = "MANAGED",
+    REQUESTS = "REQUESTS"
+}
+
+// RICH PRESENCE PORT
+const clientId = process.env.DISCORD_CLIENT_ID
+const clientSecret = process.env.DISCORD_CLIENT_SECRET
+const scopes = ['rpc']
+
+const rpc = new RPC.Client({ transport: "ipc" })
+
+app.get('/token', async (req, res) => {
+    console.log('TOKEN??');
+    console.log(req.body);
+    // res.send('hi');
+});
+
+// RICH PRESENCE PORT
+
 
 // let uuid = randomUUID();
 // let currentTrackId = uuid;
@@ -89,67 +115,214 @@ interface StoredTrack {
 // let lastFmUrl = `${process.env.LASTFM_BASE}/?method=user.getrecenttracks&user=${process.env.LASTFM_USERNAME}&api_key=${process.env.LASTFM_API_KEY}&format=json&limit=1`
 let lastFmUrl = `${process.env.LASTFM_BASE}/playback/now-playing`
 console.log(lastFmUrl)
+let devApi = false;
+let nightMode = false;
+let managedPlayback: PlaybackType = PlaybackType.MANUAL
+let channelId = null;
+// client = null;
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
+// console.log(process.argv)
+let args: { key: string, value: string }[] = [];
+process.argv.filter(a => a.includes("=")).forEach((arg, index) => {
+    let split = arg.split("=")
+    let key = split[0]
+    let value = split[1]
+
+    if (["c", "channelid"].includes(key)) key = "c"
+    if (["n", "nightmode"].includes(key)) key = "n"
+    if (["b", "bot"].includes(key)) key = "b"
+    if (["p", "playback"].includes(key)) key = "p"
+
+    args.push({ key, value })
+})
+
+// console.log(args)
+
+
+console.log("Processing startup arguments...")
+args.forEach((arg: { key: string, value: string }) => {
+    let value = arg.value.toLowerCase()
+    if (arg.key === "c") {
+        channelId = value
+    } else if (arg.key === "n") {
+        if (value === "false") {
+            nightMode = false;
+        } else if (value === "true") {
+            nightMode = true;
+        } else {
+            nightMode = false;
+        }
+    }
+    // else if (arg.key === "b") {
+    //     console.log("BOT", value)
+    //     if (value === "false") {
+    //         client = null;
+    //     } else if (value === "true") {
+    //         client = client;
+    //     }
+    // } 
+    else if (arg.key === "p") {
+        if (PlaybackType[value.toUpperCase()]) {
+            managedPlayback = PlaybackType[value.toUpperCase()]
+        } else {
+            managedPlayback = PlaybackType.MANUAL
+        }
+    } else {
+        return console.log("Invalid arg", arg)
+    }
+})
+
+console.log("Startup Parameters:")
+console.log("Channel ID", channelId)
+console.log("Night Mode", nightMode)
+console.log("Using Client?", (client !== null))
+console.log("Playback Type", managedPlayback.toString())
 
 
 let trackId;
 async function heartbeat() {
+    // if (managedPlayback === PlaybackType.MANUAL) return console.log("Skipping Heartbeat", managedPlayback)
+    // is it playing?
     let isPlaying = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.IS_PLAYING))
     console.log("[HEARTBEAT] Check 1 - ", isPlaying)
-    setTimeout(async () => {
+    // setTimeout(async () => {
+    // wait 750ms, check again, just to be sure :)
 
-        isPlaying = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.IS_PLAYING))
+    if (isPlaying.is_playing) return console.log("Returning heartbeat - music is playing");
 
-        console.log("[HEARTBEAT] Check 2 - ", isPlaying)
-        if (!isPlaying || !isPlaying.is_playing || isPlaying.status !== "ok") {
-            //fail - try to play
-            console.log("[HEARTBEAT] Playback lost - Attempting to restore.")
-            console.log(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_PAUSE))
-            try {
-                let r = await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_PAUSE), {}, { headers: { "apptoken": process.env.CIDER_TOKEN } })
-                console.log((r?.status))
-                let i = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.IS_PLAYING))
-                if (i.is_playing) {
-                    console.log("[HEARTBEAT] Restored Playback")
-                } else {
-                    console.log("[HEARTBEAT] First attempt failed - Attempting to enable autoplay")
-                    let r = await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.PLAY_HREF), { "href": "/v1/catalog/us/stations/ra.u-0175e52d7cfcd6031abb70ff757aa95f" }, { headers: { "apptoken": process.env.CIDER_TOKEN } })
-                    if (r.status === 200) {
-                        await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_AUTOPLAY))
-                        console.log("[HEARTBEAT] Attempting mission autoplay")
-                    }
+    isPlaying = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.IS_PLAYING))
 
+    console.log("[HEARTBEAT] Check 2 - ", isPlaying)
+    // is it playing now?
+    if (!isPlaying || !isPlaying.is_playing || isPlaying.status !== "ok") {
+        //no? fuck. unpause it.
+        console.log("[HEARTBEAT] Playback lost - Attempting to restore.")
+        console.log(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_PAUSE))
+        if (managedPlayback as PlaybackType !== PlaybackType.MANAGED) return console.log("Managed Playback disabled, no longer attempting to restore playback.");
+        try {
+            // attempt to unpause current track
+            let r = await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_PAUSE), {}, { headers: { "apptoken": process.env.CIDER_TOKEN } })
+            console.log((r?.status))
+            // is it playing now?
+            let i = await Cider.utils.api.GET(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.IS_PLAYING))
+            if (i.is_playing) {
+                // all good - playback is restored
+                console.log("[HEARTBEAT] Restored Playback")
+            } else {
+                // something went horribly wrong. enabling autoplay
+                console.log("[HEARTBEAT] First attempt failed - Attempting to enable autoplay")
+                // play radio station
+                let r = await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.PLAY_HREF), { "href": "/v1/catalog/us/stations/ra.u-0175e52d7cfcd6031abb70ff757aa95f" }, { headers: { "apptoken": process.env.CIDER_TOKEN } })
+                if (r.status === 200) {
+                    // enable autoplay
+                    await axios.post(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.TOGGLE_AUTOPLAY))
+                    console.log("[HEARTBEAT] Attempting mission autoplay")
                 }
 
-            } catch (e: AxiosError | any) {
-                console.log((e as AxiosError).status)
-                console.log("[HEARTBEAT] Failed to restore playback")
             }
+
+        } catch (e: AxiosError | any) {
+            // something went REALLY wrong
+            console.log((e as AxiosError).status)
+            console.log("[HEARTBEAT] Failed to restore playback")
         }
-    }, 750)
+    }
+    // }, 750)
 }
+
+// RICH PRESENCE PORT
+let rpcReady = false;
+rpc.on("ready", () => {
+    console.log("Rich presence connected")
+    rpcReady = true;
+})
+
+// setInterval(heartbeat, 1e2)
 setInterval(async () => {
-    heartbeat();
+    heartbeat()
     let { data }: any = await axios.get("http://localhost:1234/nowplaying") as any
     if (!data) return;
     // console.log("INCOMING | CURRENT")
     console.log(data.id + " / " + trackId)
-    if (trackId && trackId === data.id) return;
+    if (trackId !== null && trackId === data.id) return;
+    // RICH PRESENCE
+    console.log("rpc ready", rpcReady)
+    if (rpcReady) {
+        let nowDate = data.addedTimestamp ? data.addedTimestamp : Date.now();
+        let rpcData = {
+            largeImageKey: 'radio_icon',
+            largeImageText: 'Ducky Radio',
+            smallImageKey: 'ducky_logo',
+            smallImageText: 'Ducky Radio',
+            startTimestamp: nowDate,
+            // endTimestamp: (Date.now() + track.duration) > nowDate ? Date.now() + track.duration : ,
+            state: `${decodeURI(data.artist)} [${decodeURI(data.album)}]`,
+            details: `${decodeURI(data.title)}`,
+            // buttons: [{ label: 'Listen', url: `https://discord.com/channels/${guild}/${channel}` }],
+        };
+        if (Date.now() + data.duration > nowDate) data.endTimestamp = Date.now() + data.duration;
+        console.log(rpcData)
+        rpc.setActivity(rpcData, process.pid).then(() => {
+            console.log("Updated Rich Presence")
+        }).catch(er => {
+            console.log("Failed to update RPC")
+        });
+    }
+    // RICH PRESENCE
     if (data.id === "0" || data.title === "Nothing is") return;
     trackId = data.id
     try {
         let json = JSON.parse((await readFile(trackFilePath, "utf-8")))
         json[data.id] = data
         await writeFile(trackFilePath, JSON.stringify(json), "utf-8")
-        if (client && client.isReady()) client.emit("newTrack", data)
+        if (client !== null && client.isReady()) client.emit("newTrack", data)
+        console.log(data)
+        console.log(`${devApi ? `http://localhost:8083/api/music/tracks/` : `https://ducky.wiki/api/music/tracks/`}${data.id}`)
+        await axios.post(`${devApi ? `http://localhost:8083/api/music/tracks/` : `https://ducky.wiki/api/music/tracks/`}${data.id}`, data, { headers: { "apikey": process.env.DUCKY_API_KEY } })
     } catch (e) {
-        console.log("Couldn't write to tracks.json")
+        console.log("Couldn't update track history")
+        console.log("STACK", e)
     }
 }, 2000);
 
+// RICH PRESENCE PORT
+
+app.use(cors())
+app.use(json())
 app.get("/tracks/history/overlay", async (req, res) => {
     res.sendFile(join(__dirname, "/pages/trackHistory.html"))
+})
+
+interface SendMessageRequest {
+    key: string;
+    content: string;
+    color: number;
+}
+
+app.get("/admin", async (req, res) => {
+    res.sendFile(join(__dirname, "/pages/manage.html"))
+})
+
+app.post("/client/postMessage", async (req, res) => {
+    console.log(req.body)
+    if (!client || client === null) { res.sendStatus(404); return; }
+    let channel: TextChannel = client.guilds.cache.get(process.env.GUILD_ID).channels.cache.get(channelId) as TextChannel
+    let body: SendMessageRequest = req.body;
+    if (!body || body === null || !body.key || body.key !== process.env.SECRET_KEY) { res.sendStatus(404); return; }
+    let message: string = body.content;
+    let color: number = body.color;
+    if (!message) { res.sendStatus(404); return; }
+    if (!color) color = 0x343453
+    let container = new ContainerBuilder().setAccentColor(color)
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(message))
+    try {
+        channel.send({ flags: [MessageFlags.IsComponentsV2], components: [container] })
+        res.send({ success: true })
+    } catch (er) {
+        res.sendStatus(401)
+        return;
+    }
 })
 
 app.get("/tracks/history", async (req, res) => {
@@ -174,7 +347,37 @@ app.get("/tracks/history", async (req, res) => {
     payload.data = json
     res.send(payload)
 })
-console.log(__dirname)
+
+app.get("/tracks/:id", async (req, res) => {
+    let payload = {
+        success: false,
+        data: {}
+    }
+    if (!req.params.id) { res.send(payload); return; }
+    let file = await readFile(trackFilePath, "utf-8");
+    // console.log(file)
+    if (!file) {
+        res.send(payload)
+        return;
+    }
+    let json = JSON.parse(file);
+    // console.log(json)
+    if (!json) {
+        res.send(payload)
+        return;
+    }
+    if (json[req.params.id]) {
+        payload.data = json[req.params.id]
+        payload.success = true;
+        res.send(payload)
+        return;
+    } else {
+        res.send(payload)
+        return;
+    }
+    // payload.data = json
+})
+// console.log(__dirname)
 
 app.get("/static/:file", async (req, res) => {
     let filename = req.params.file
@@ -254,6 +457,7 @@ app.get("/debug/:id", async (req, res) => {
 
 app.get("/nowplaying", async (req, res): Promise<any> => {
     let np = await axios.get(lastFmUrl)
+    console.log((np as any).data.info.durationInMillis)
     // console.log(Cider.utils.api.buildURL(URLTypes.PLAYBACK, Endpoints.QUEUE_CLEAR))
     // console.log(np.data.recenttracks)
     // if (np) res.send(np.data.recenttracks[0])
@@ -269,6 +473,7 @@ app.get("/nowplaying", async (req, res): Promise<any> => {
             // nowplaying: true,
             addedTimestamp: Date.now(),
             genres: [],
+            duration: 0
         }
 
         // https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png
@@ -287,7 +492,8 @@ app.get("/nowplaying", async (req, res): Promise<any> => {
             trackUrl: "https://ducky.wiki/trackNotFound",
             // nowplaying: true,
             addedTimestamp: Date.now(),
-            genres: []
+            genres: [],
+            duration: 0
         }
 
         res.send(trackData)
@@ -304,6 +510,7 @@ app.get("/nowplaying", async (req, res): Promise<any> => {
         // let songId = btoa(encodeURI(firstTrack.name))
         // console.log(firstTrack.playParams)
         let songId = firstTrack?.playParams.id
+        // console.log(firstTrack)
         trackData = {
             id: songId ? songId : "0",
             album: firstTrack.albumName ? encodeURI(firstTrack.albumName) : "Nothing Playing",
@@ -317,7 +524,8 @@ app.get("/nowplaying", async (req, res): Promise<any> => {
             // imageUrl: firstTrack.image.find(i => i.size === "extralarge")["#text"] ? firstTrack.image.find(i => i.size === "extralarge")["#text"] : "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png",
             // trackUrl: firstTrack.url ? firstTrack.url : "https://ducky.wiki/trackNotFound",
             genres: firstTrack.genreNames.length > 0 ? firstTrack.genreNames : [],
-            addedTimestamp: Date.now()
+            addedTimestamp: Date.now(),
+            duration: firstTrack.durationInMillis ? firstTrack.durationInMillis : 0
         }
 
         if (trackData.title !== null && trackData.artist !== null && trackData.imageUrl !== null) {
@@ -351,7 +559,8 @@ app.get("/nowplaying", async (req, res): Promise<any> => {
             trackUrl: "https://ducky.wiki/trackNotFound",
             // nowplaying: true,
             genres: [],
-            addedTimestamp: Date.now()
+            addedTimestamp: Date.now(),
+            duration: 0
         })
         console.log("AXIOS", err)
     }
@@ -399,7 +608,8 @@ const discordCommands: ApplicationCommandData[] = [
 
 
 
-client.on("ready", async (c) => {
+
+if (client) client.on("ready", async (c) => {
     console.log(client.user?.username)
     client.application?.commands.set(discordCommands).then(r => {
         console.log(`LOADED ${discordCommands.length} command${discordCommands.length === 1 ? "" : "s"}`)
@@ -418,20 +628,26 @@ client.on("ready", async (c) => {
 
 })
 
-client.on("newTrack", (track: Track) => {
+if (client) client.on("newTrack", (track: Track) => {
+    if (!channelId) return console.log("CLIENT DISABLED")
     if (track.id === "0") return console.log("NOTHING IS PLAYING!")
     console.log(client?.user?.username)
     console.log("NEW SONG")
     console.log(track)
-    let channelId = process.env.CHANNEL_ID as string;
+    // let channelId = process.env.CHANNEL_ID as string;
     let channel: TextChannel = client.guilds.cache.get(process.env.GUILD_ID as string)?.channels.cache.get(channelId) as TextChannel
-    let container = new ContainerBuilder().addMediaGalleryComponents(new MediaGalleryBuilder().addItems([{ media: { url: track.imageUrl, width: 1024, height: 1024 } }])).addTextDisplayComponents(new TextDisplayBuilder().setContent([`## <a:RadioSpin:1341207082971693178> Now Playing`, `[**${decodeURI(track.title)}** — ${decodeURI(track.artist)}](${track.trackUrl})`, "", "-# This system is currently running unsupervised.\nReport any bugs or inappropriate tracks with </somethingbroke:1384060315066437715>!"].join("\n")))
+    let container = new ContainerBuilder().addMediaGalleryComponents(new MediaGalleryBuilder().addItems([{ media: { url: track.imageUrl, width: 1024, height: 1024 } }])).addTextDisplayComponents(new TextDisplayBuilder().setContent([`## Now Playing`, "", `<a:RadioSpin:1341207082971693178> [**${decodeURI(track.title)}** — ${decodeURI(track.artist)}](${track.trackUrl})`,
+        // "", nightMode ? "-# This system is currently running unsupervised.\nReport any bugs or inappropriate tracks with </somethingbroke:1384060315066437715>!" : "-# Report bugs & inappropriate tracks with </somethingbroke:1384060315066437715>!", "", managedPlayback ? "\n-# Autoplay is Enabled" : ""
+    ].join("\n")))
+    if (managedPlayback as PlaybackType === PlaybackType.MANUAL && nightMode) container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`\n\n-# The radio is currently running unsupervised. Please report bugs & inappropriate tracks with </somethingbroke:1384060315066437715>!`))
+    if (managedPlayback as PlaybackType === PlaybackType.MANAGED) container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`\n\n-# Autoplay is enabled. Please report bugs & inappropriate tracks with </somethingbroke:1384060315066437715>!${nightMode ? `\n-# The radio is currently running unsupervised.` : ""}`))
+    if (managedPlayback as PlaybackType === PlaybackType.REQUESTS) container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`\n\n-# Requests are open! @ ducky with a song **title & artist** to make a request!`))
     // .addSeparatorComponents(sep => sep.setSpacing(SeparatorSpacingSize.Large))
     // .addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ducky Radio — vibe out :)`))
     channel.send({ flags: [MessageFlags.IsComponentsV2], components: [container] })
 })
 
-client.on("interactionCreate", async interaction => {
+if (client) client.on("interactionCreate", async interaction => {
     if (!interaction.isChatInputCommand()) return;
     if (interaction.isChatInputCommand()) {
         if (interaction.commandName === "last5") {
@@ -526,6 +742,7 @@ client.on("interactionCreate", async interaction => {
 //         }
 //     }
 // })
+if ((process.env.DISCORD_TOKEN && process.env.DISCORD_TOKEN !== "") && (process.argv.includes("b=true"))) { client.login(process.env.DISCORD_TOKEN) }
 
 app.listen(process.env.PORT, async (er) => {
     console.log("LISTENING!")
@@ -534,4 +751,7 @@ app.listen(process.env.PORT, async (er) => {
     //     await writeFile(trackFilePath, JSON.stringify({}))
     // }
 })
-if (process.env.DISCORD_TOKEN && process.env.DISCORD_TOKEN !== "") { client.login(process.env.DISCORD_TOKEN) }
+rpc
+    .login({ clientId, scopes, redirectUri: 'http://localhost:1234/token', clientSecret })
+
+    .catch(console.error);
