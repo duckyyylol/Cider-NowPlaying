@@ -73,7 +73,7 @@ _emitter.on(AppEvents.NewTrack, (track: Track) => {
         if(channel == null) return console.log(`[DISCORD] Could not send a now playing message. Invalid channel provided.`)
         const container = new ContainerBuilder();
         if(track.imageUrl != null) container.addMediaGalleryComponents(new MediaGalleryBuilder().addItems([{media: {url: track.imageUrl, width: 512, height: 512}}]))
-        container.addTextDisplayComponents(new TextDisplayBuilder().setContent([`## Now Playing`, "", `${_appListener.getDiscordProvider().guildId == "1066284388700135466" ? `<a:RadioSpin:1341207082971693178>` : `💿`} [**${decodeURI(track.title)}** — ${decodeURI(track.artist)}](${track.trackUrl})`].join("\n")));
+        container.addTextDisplayComponents(new TextDisplayBuilder().setContent([`## Now Playing`, "", `${_appListener.getDiscordProvider().guildId == "1066284388700135466" ? `<a:RadioSpin:1341207082971693178>` : `💿`} [**${decodeURIComponent(track.title)}** — ${decodeURIComponent(track.artist)}](${track.trackUrl})`].join("\n")));
 
         channel.send({flags: [MessageFlags.IsComponentsV2], components: [container]});
     }

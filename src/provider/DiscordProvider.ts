@@ -107,8 +107,8 @@ export default class DiscordProvider {
             smallImageKey: this.smallImageKey,
             smallImageText: this.smallImageText,
             startTimestamp: track.lastPlayedTimestamp,
-            details: `${decodeURI(track.title)}`,
-            state: `${decodeURI(track.artist)}${track.album != null ? ` [${decodeURI(track.album)}]` : ''}`
+            details: `${decodeURIComponent(track.title)}`,
+            state: `${decodeURIComponent(track.artist)}${track.album != null ? ` [${decodeURIComponent(track.album)}]` : ''}`
             
         })
 
