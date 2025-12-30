@@ -1,0 +1,19 @@
+:root {
+    --br: 16px;
+}
+
+body {
+    background-color: #001931;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    color: white;
+}
+
+.bold {
+    font-family: "Cobbler Sans";
+}
+
+.normal {
+    font-family: "Cobbler Sans Medium";
+}
