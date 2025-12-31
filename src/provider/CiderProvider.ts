@@ -58,7 +58,7 @@ export default class CiderProvider extends AudioServiceProvider {
 
     async nowPlaying(): Promise<Response<Track | null>> {
         const res = await this.GET("/playback/now-playing")
-        if (res.error !== null || res.data === null) return res;
+        if (res.error !== null && res.data === null) return {error: "Not Found", data: null};
         const trackData: CiderNowPlayingResponse = res.data;
         if (trackData?.status !== "ok") return { data: null, error: "Not Found" };
         const apiTrack = this.translateTrack(trackData);
@@ -72,8 +72,8 @@ export default class CiderProvider extends AudioServiceProvider {
             id: this.encodeTrackId(trackData.info?.artistName || null, trackData.info?.name || "Nothing is Playing", trackData.info?.albumName || null),
             album: encodeURIComponent(trackData.info?.albumName || null),
             artist: encodeURIComponent(trackData.info?.artistName || null), 
-            title: encodeURIComponent(trackData.info?.name || "Nothing is Playing"),
-            imageUrl: trackData.info?.artwork?.url || "https://ducky.wiki/public/img/ducky.png",
+            title: encodeURIComponent(trackData.info?.name || null),
+            imageUrl: trackData.info?.artwork?.url || null,
             lastPlayedTimestamp: Date.now(),
             trackUrl: trackData.info?.url || "https://ducky.wiki/trackNotFound",
             genres: trackData.info?.genreNames?.length > 0 ? trackData.info.genreNames.map(x => encodeURIComponent(x)) : null,
@@ -95,19 +95,18 @@ export default class CiderProvider extends AudioServiceProvider {
 
             // Record Playing Tracks
             const nowPlayingResponse = await this.nowPlaying();
-            if (nowPlayingResponse.data !== null) {
+            if (nowPlayingResponse.data !== null && nowPlayingResponse.data.artist !== null) {
                 const currentTrack: Track = nowPlayingResponse.data;
                 // console.log(this.serviceName + "NOW PLAYING", currentTrack)
                 if (_appListener.getTrack() != currentTrack.id) { 
-                    _appListener.setTrack(currentTrack.id); 
                     _emitter.emit(AppEvents.NewTrack, currentTrack);
                 }
             } else {
                 console.log(`[${this.serviceName.toUpperCase()}] ${this.serviceName} is enabled but not returning now playing requests.`)
-                if(services.length === 1 && services[0] === this.serviceName) {
-                    _appListener.setTrack(null); 
-                    _emitter.emit(AppEvents.NewTrack, null);
-                }
+                // if(services.length === 1 && services[0] === this.serviceName) {
+                //     _appListener.setTrack(null); 
+                //     _emitter.emit(AppEvents.NewTrack, null);
+                // }
             }
         }, this.interval)
     }

@@ -8,11 +8,12 @@ import process from "node:process"
 import express, { json } from "express";
 import AppListener from "./class/AppListener";
 import APIRoute from "./route/api";
-import { ContainerBuilder, Events, MediaGalleryBuilder, MessageFlags, PermissionOverwriteManager, TextDisplayBuilder } from "discord.js";
+import { CacheType, ContainerBuilder, Events, Interaction, MediaGalleryBuilder, MessageFlags, PermissionOverwriteManager, TextDisplayBuilder } from "discord.js";
 import { post } from "axios";
 import OverlayRoute from "./route/overlay";
 import { WebSocketServer } from "ws";
 import { randomUUID } from "node:crypto";
+import { CommandBuilder } from "./class/CommandBuilder";
 
 configDotenv({ quiet: true, path: join(process.cwd(), ".env") })
 
@@ -134,6 +135,11 @@ _socket.on("connection", (socket: WebSocket) => {
 // APP EVENTS
 
 _emitter.on(AppEvents.NewTrack, (track: Track) => {
+    if(track.artist === null || track.title === null) return;
+    if(track.title.includes("null") || track.artist.includes("null")) return;
+    if(_appListener.getTrack() !== null && track.id === _appListener.getTrack()) return;
+    if(track.title !== "Nothing is Playing") _appListener.setTrack(track.id)
+    console.log(_appListener.getTrack())
     console.log("[EVENTS] New Track", `(${track.title}${track.artist != null ? ` - ${track.artist}` : ''})${track.album != null ? ` [${track.album}]` : ''}`);
 
     // WEBSOCKET
@@ -161,6 +167,9 @@ _emitter.on(AppEvents.NewTrack, (track: Track) => {
     }
 
     if (config.nowPlayingUpdates) {
+        if(!track.artist) return;
+        if(!track.title) return;
+        if(track.title === "Nothing is Playing") return;
         const channel = _appListener.getDiscordProvider().getChannel(config.updateChannel);
         if (channel == null) return console.log(`[DISCORD] Could not send a now playing message. Invalid channel provided.`)
         const container = new ContainerBuilder();
@@ -186,9 +195,21 @@ _emitter.on(AppEvents.NewTrack, (track: Track) => {
 // DISCORD EVENTS
 _appListener.getDiscordProvider().getClient().on(Events.ClientReady, () => {
     const client = _appListener.getDiscordProvider().getClient();
+    _appListener.getDiscordProvider().loadCommands();
     console.log(`[DISCORD] Client is logged in as ${client.user.username}#${client.user.discriminator}`)
     if (config.nowPlayingUpdates) console.log(`[DISCORD] Sending now playing updates to channel ${_appListener.getDiscordProvider().getChannel(config.updateChannel)}`)
 
+})
+
+_appListener.getDiscordProvider().getClient().on(Events.InteractionCreate, async (interaction: Interaction<CacheType>) => {
+    if(interaction.isChatInputCommand()) {
+        const commandName = interaction.commandName;
+        if(_appListener.getDiscordProvider().getCommandMap().has(commandName)) {
+            const command: CommandBuilder = _appListener.getDiscordProvider().getCommandMap().get(commandName);
+            let run = command.getRunMethod();
+            await run(interaction, _appListener.getDiscordProvider());
+        }
+    }
 })
 
 // RPC EVENTS

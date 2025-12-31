@@ -17,7 +17,7 @@ export default class AppListener {
         this.trackId = null;
         this.fails = 0;
 
-        this.interval = 3e3;
+        this.interval = 5000;
         this.services = services;
 
         this.ciderProvider = services.includes("cider") ? new CiderProvider("http://localhost:10767", "/api/v1", "/playback/is-playing") : null;

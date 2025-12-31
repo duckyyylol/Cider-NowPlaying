@@ -47,7 +47,7 @@ export default class AudioServiceProvider {
         this.active = false;
 
         this.serviceName = serviceName;
-        this.interval = 3000;
+        this.interval = 5000;
     }
 
     makeHash(track: Track): string {

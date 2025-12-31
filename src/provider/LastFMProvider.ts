@@ -109,7 +109,6 @@ export default class LastFMProvider extends AudioServiceProvider {
                 const currentTrack: Track = nowPlayingResponse.data;
                 // console.log(this.serviceName + "NOW PLAYING", currentTrack)
                 if (_appListener.getTrack() != currentTrack.id) {
-                    _appListener.setTrack(currentTrack.id);
                     _emitter.emit(AppEvents.NewTrack, currentTrack);
                 }
             } else {

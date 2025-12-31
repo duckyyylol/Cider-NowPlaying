@@ -158,8 +158,9 @@
             }
 
             if (packet.command === "newTrack" && authorized) {
+                
                 console.log(packet.data)
-                if(packet.data?.title) {
+                if(packet.data?.title && packet.data?.artist) {
                     if(packet.data.imageUrl) {
                         icecast = false;
                         setTrack(packet.data);
