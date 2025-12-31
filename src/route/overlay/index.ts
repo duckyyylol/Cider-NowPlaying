@@ -12,4 +12,12 @@ OverlayRoute.get("/nowplaying", async (req, res) => {
     res.send(returnHTMLContent("nowplaying"))
 })
 
+OverlayRoute.get("/art/cover", async (req, res) => {
+    res.send(returnHTMLContent("cover"))
+})
+
+OverlayRoute.get("/art/cover/grid", async (req, res) => {
+    res.send(returnHTMLContent("coverGrid"))
+})
+
 export default OverlayRoute;

@@ -14,6 +14,7 @@ export interface Track {
     lastPlayedTimestamp: number;
     imageUrl: string | null;
     genres: string[] | null;
+    hash: string;
 }
 
 export interface JSON_StoredTrack {
@@ -28,7 +29,7 @@ export function returnData(result: AxiosResponse): Response {
     return { data: result.data, error: null };
 }
 
-let trackIdDelim = "+"
+
 
 export default class AudioServiceProvider {
     baseUrl: string;
@@ -49,13 +50,22 @@ export default class AudioServiceProvider {
         this.interval = 3000;
     }
 
-    encodeTrackId(artist: string, title: string, album: string): string {
-        let joined = `${(artist)}${trackIdDelim}${(title)}${trackIdDelim}${(album)}`;
+    makeHash(track: Track): string {
+        let trackIdDelim = "+"
+        let joined = `${(track.artist)}${trackIdDelim}${(track.title)}${trackIdDelim}${(track.album)}`;
         joined = joined.replaceAll(new RegExp("[^a-zA-Z0-9]*", "gim"), "");
         return btoa(joined);
     }
 
+    encodeTrackId(artist: string, title: string, album: string): string {
+        let trackIdDelim = "+"
+        let joined = `${(artist != null ? artist : "")}${artist != null ? trackIdDelim : ""}${(title != null ? title : "")}${album != null ? trackIdDelim : ""}${(album != null ? album : "")}`;
+        joined = joined.replaceAll(new RegExp("[^a-zA-Z0-9]*", "gim"), "").toLowerCase().trim();
+        return joined;
+    }
+
     decodeTrackid(id: string): {artist: string, title: string, album: string} {
+        let trackIdDelim = "+"
         const decoded = atob(id);
         const split = decoded.split(trackIdDelim);
         return {artist: split[0], title: split[1], album: split[2]};

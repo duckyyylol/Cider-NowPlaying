@@ -71,7 +71,7 @@ export default class LastFMProvider extends AudioServiceProvider {
     translateTrack(trackData: LastFMNowPlayingResponse): Track {
         const largeImage = trackData?.image.find(x => x.size === "extralarge");
 
-        const apiTrack: Track = {
+        let apiTrack: Track = {
             id: this.encodeTrackId(trackData?.artist["#text"] || "Nothing", trackData?.name || "Nobody", trackData?.album["#text"] || "Sounds of Nothing"),
             album: trackData?.album["#text"] ? encodeURIComponent(trackData?.album["#text"]) : null,
             artist: trackData?.artist["#text"] ? encodeURIComponent(trackData?.artist["#text"]) : null,
@@ -79,8 +79,11 @@ export default class LastFMProvider extends AudioServiceProvider {
             title: encodeURIComponent(trackData?.name || "Nothing is Playing"),
             imageUrl: largeImage ? largeImage["#text"] : null,
             trackUrl: trackData?.url || "https://ducky.wiki/trackNotFound",
-            lastPlayedTimestamp: Date.now()
+            lastPlayedTimestamp: Date.now(),
+            hash: null
         };
+
+        apiTrack.hash = this.makeHash(apiTrack);
 
         return apiTrack;
     }

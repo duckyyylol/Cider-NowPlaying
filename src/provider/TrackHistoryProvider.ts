@@ -1,6 +1,7 @@
 import { join } from "path";
-import { JSON_StoredTrack, Response, statusError, Track } from "./AudioServiceProvider";
+import AudioServiceProvider, { JSON_StoredTrack, Response, statusError, Track } from "./AudioServiceProvider";
 import { ensureDirSync, existsSync, opendirSync, readJSONSync, writeJSONSync } from "fs-extra";
+import { _appListener } from "..";
 
 export interface RecordedTrackResponse {
     trackId: string | null;
@@ -27,6 +28,13 @@ export default class TrackHistoryProvider {
         }
     }
 
+    makeHash(track: Track): string {
+        let trackIdDelim = "+"
+        let joined = `${(track.artist)}${trackIdDelim}${(track.title)}${trackIdDelim}${(track.album)}`;
+        joined = joined.replaceAll(new RegExp("[^a-zA-Z0-9]*", "gim"), "");
+        return btoa(joined);
+    }
+
     getData(trackId: string | null = null): Response<JSON_StoredTrack | Track> {
         if (trackId == null) {
             try {
@@ -39,6 +47,7 @@ export default class TrackHistoryProvider {
             try {
                 const json: JSON_StoredTrack = readJSONSync(this.dataFilePath);
                 const track: Track = json[trackId];
+                if(!track) return { data: null, error: "Not Found" }
                 return { data: track as Track, error: null };
             } catch (e) {
                 return statusError(e);

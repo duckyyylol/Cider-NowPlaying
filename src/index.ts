@@ -93,12 +93,13 @@ _socket.on("connection", (socket: WebSocket) => {
 
     socket.onmessage = (async ({ data }) => {
         const packet = JSON.parse(data.toString()) as Packet;
-
+        
         switch (packet.command) {
             case "hello": {
-                socketId = randomUUID();
                 authorized = true;
+                socketId = randomUUID();
                 _socketMap.set(socketId, socket);
+                console.log(`[WEBSOCKET] Socket ID ${socketId} is now listening to events`)
                 heartbeat = setInterval(() => {
                     socket.send(_createPacket("heartbeat", {}));
                 }, _appListener.interval)
@@ -115,7 +116,15 @@ _socket.on("connection", (socket: WebSocket) => {
             }
         }
     })
+
+    socket.onclose = (async (s) => {
+        _socketMap.delete(socketId);
+        console.log(`Socket ${socketId} disconnected`);
+        clearInterval(heartbeat);
+    })
 })
+
+
 
 // WEBSOCKET
 
@@ -162,7 +171,15 @@ _emitter.on(AppEvents.NewTrack, (track: Track) => {
     }
 
     // POST TO DUCKY API
-    if (process.env.DUCKY_API_KEY) post(`https://ducky.wiki/api/music/tracks/${track.id}`, { ...track, addedTimestamp: track.lastPlayedTimestamp }, { headers: { "apikey": process.env.DUCKY_API_KEY } })
+    if (process.env.DUCKY_API_KEY) {
+        try {
+            post(`https://ducky.wiki/api/music/tracks/${track.id}`, { ...track, addedTimestamp: track.lastPlayedTimestamp }, { headers: { "apikey": process.env.DUCKY_API_KEY } }).catch(e => {
+                console.log("Couldn't POST to Ducky API")
+            })
+        } catch(e) {
+            console.log("Couldn't POST to Ducky API.")
+        }
+    }
 
 })
 

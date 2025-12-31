@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+
+<head>
+    <style>
+        @import url("/public/styles/core.css");
+
+        body {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+        }
+
+        .grid {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 0.5em;
+        }
+
+        img {
+            height: 75px;
+            width: 75px;
+            aspect-ratio: 1/1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="grid">
+
+    </div>
+
+
+    <script>
+        function createPacket(command, data) {
+            return JSON.stringify({ command, data, id: 0 });
+        }
+
+        function createGridItem(track, rad) {
+            const img = document.createElement("img");
+            img.setAttribute("src", track.imageUrl);
+            img.style.borderRadius = `${rad}px`;
+            return img;
+        }
+
+        function processTrackHistory(show_tracks = 30, cols = 5, rad = 0) {
+            const grid = document.querySelector(".grid");
+            let maxTracksShown = show_tracks;
+            let items = [];
+            fetch("http://localhost:1234/api/tracks/history").then(r => r.json().then(({ data: hist }) => {
+                let trackHistory = Object.entries(hist).filter(([id, t]) => t?.imageUrl != undefined && !t?.imageUrl?.includes("ducky.wiki"))
+                    .sort((a, b) => b[1].lastPlayedTimestamp - a[1].lastPlayedTimestamp);
+
+                trackHistory = trackHistory.slice(0, maxTracksShown);
+
+
+                trackHistory.forEach(([id, track]) => {
+                    items.push(createGridItem(track, rad));
+                })
+
+                grid.style.width = `calc(77px * ${((cols > 3 ? cols : cols - 0.4) + 1.4)})`
+                grid.replaceChildren(...items);
+                
+                console.log(`Listing ${items.length}/${maxTracksShown} item(s) - ${cols} columns`)
+            }))
+
+        }
+
+        const searchParams = new URLSearchParams(location.search);
+        const showTracks = (searchParams.has("limit") && !Number.isNaN(parseInt(searchParams.get("limit")))) ? parseInt(searchParams.get("limit")) : 30;
+        const columnCount = (searchParams.has("cols") && !Number.isNaN(parseInt(searchParams.get("cols")))) ? parseInt(searchParams.get("cols")) : 5;
+        const radius = (searchParams.has("radius") && searchParams.get("radius").toLowerCase() === "circle") ? 1000 : (searchParams.has("radius") && !Number.isNaN(parseInt(searchParams.get("radius")))) ? parseInt(searchParams.get("radius")) : 0;
+
+        let test = false;
+        if (test) {
+            processTrackHistory(showTracks, columnCount, radius);
+        }
+
+        const socket = new WebSocket("ws://localhost:12345");
+        let authorized = false;
+
+        if (!test) socket.addEventListener("message", ev => {
+            const packet = JSON.parse(ev.data);
+            if (!packet.command || !['hello', 'heartbeat', 'newTrack'].includes(packet.command)) return;
+            console.log(packet.command)
+            if (packet.command === "hello") {
+                authorized = true;
+                socket.send(createPacket("hello", {}))
+                processTrackHistory(showTracks, columnCount, radius);
+
+                console.log("Authenticating...")
+            }
+
+            if (packet.command === "newTrack" && authorized) {
+                processTrackHistory(showTracks, columnCount, radius);
+
+            }
+        })
+    </script>
+</body>

@@ -45,16 +45,19 @@ export default class IcecastProvider extends AudioServiceProvider {
         const title = encodeURIComponent(split[0]) === "Nothing" ? "Nothing is Playing" : encodeURIComponent(split[0])
         const artist = encodeURIComponent(split[1])
 
-        const apiTrack: Track = {
-            id: this.encodeTrackId(artist, title, "Sounds of Nothing"),
+        let apiTrack: Track = {
+            id: this.encodeTrackId(artist, title, null),
             album: null,
             artist: artist,
             genres: null,
             title: title,
             imageUrl: null,
             trackUrl: "https://ducky.wiki/trackNotFound",
-            lastPlayedTimestamp: Date.now()
+            lastPlayedTimestamp: Date.now(),
+            hash: null
         };
+
+        apiTrack.hash = this.makeHash(apiTrack);
 
         return apiTrack;
     }

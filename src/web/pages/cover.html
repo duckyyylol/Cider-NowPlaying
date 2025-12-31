@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<head>
+    <style>
+        @import url("/public/styles/core.css");
+
+        body {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+        }
+
+        .cover.sm {
+            max-width: 128px;
+            max-height: 128px;
+            aspect-ratio: 1/1;
+        }
+
+        .cover.med {
+            max-width: 512px;
+            max-height: 512px;
+            aspect-ratio: 1/1;
+        }
+
+        .cover.lg {
+            max-width: 1024px;
+            max-height: 1024px;
+            aspect-ratio: 1/1;
+        }
+
+        @-webkit-keyframes rotating {
+            from {
+                -webkit-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            to {
+                -webkit-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes rotating {
+            from {
+                -ms-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -webkit-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            to {
+                -ms-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -webkit-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <img src="/public/img/ducky.gif" class="cover sm">
+
+
+    <script>
+        function createPacket(command, data) {
+            return JSON.stringify({ command, data, id: 0 });
+        }
+
+        function setTrack(track) {
+            if (track.imageUrl !== null) {
+                document.querySelectorAll(".cover").forEach(e => {
+                    e.setAttribute("src", track.imageUrl)
+                })
+            } else {
+                document.querySelectorAll(".cover").forEach(e => {
+                    e.setAttribute("src", '/public/img/ducky.gif')
+                })
+            }
+        }
+
+        const searchParams = new URLSearchParams(location.search);
+        const small = !searchParams.has("medium") && searchParams.has("small");
+        const large = !small && searchParams.has("large");
+        const medium = !small && !large;
+
+        const size = small ? "sm" : large ? "lg" : medium ? "med" : "med";
+        console.log("size", size)
+
+        const spin = (searchParams.has("spin") && !Number.isNaN(parseInt(searchParams.get("spin"))) && [0, 1].includes(parseInt(searchParams.get("spin")))) ? parseInt(searchParams.get("spin")) : 1;
+        const spinEnabled = searchParams.has("spin")
+
+        if (spinEnabled) {
+            document.querySelectorAll(".cover").forEach(e => {
+                e.style.animation = `rotating 10s linear infinite`;
+                e.style.animationDirection = spin === 0 ? "reverse" : "normal";
+            })
+        } else {
+            document.querySelectorAll(".cover").forEach(e => {
+                e.style.animation = `none`;
+            })
+        }
+
+        const radius = (searchParams.has("radius") && searchParams.get("radius").toLowerCase() === "circle") ? 1000 : (searchParams.has("radius") && !Number.isNaN(parseInt(searchParams.get("radius")))) ? parseInt(searchParams.get("radius")) : 0;
+        console.log("spin", spin, spinEnabled)
+
+        document.querySelectorAll(".cover").forEach(e => e.classList.add(size))
+        document.querySelectorAll(".cover").forEach(e => e.style.borderRadius = `${radius}px`)
+
+        // document.querySelector("body").style.justifyContent = align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center"
+
+        let test = true;
+        if (test) {
+            let track;
+            fetch("http://localhost:1234/api/tracks/nowplaying").then(r => r.json().then(currentTrack => {
+                setTrack(currentTrack.data)
+                console.log(currentTrack.data)
+            }))
+        }
+
+        const socket = new WebSocket("ws://localhost:12345");
+        let authorized = false;
+
+        if (!test) socket.addEventListener("message", ev => {
+            const packet = JSON.parse(ev.data);
+            if (!packet.command || !['hello', 'heartbeat', 'newTrack'].includes(packet.command)) return;
+            console.log(packet.command)
+            if (packet.command === "hello") {
+                authorized = true;
+                socket.send(createPacket("hello", {}))
+                console.log("Authenticating...")
+            }
+
+            if (packet.command === "newTrack" && authorized) {
+                console.log(packet.data)
+                setTrack(packet.data);
+            }
+        })
+    </script>
+</body>

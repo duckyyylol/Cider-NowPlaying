@@ -67,8 +67,9 @@ export default class CiderProvider extends AudioServiceProvider {
     }
 
     translateTrack(trackData: CiderNowPlayingResponse): Track {
-        const apiTrack: Track = {
-            id: this.encodeTrackId(trackData.info?.artistName || "Nothing", trackData.info?.name || "Nobody", trackData.info.albumName || "Sounds of Nothing"),
+        let apiTrack: Track = {
+            hash: null,
+            id: this.encodeTrackId(trackData.info?.artistName || null, trackData.info?.name || "Nothing is Playing", trackData.info?.albumName || null),
             album: encodeURIComponent(trackData.info?.albumName || null),
             artist: encodeURIComponent(trackData.info?.artistName || null), 
             title: encodeURIComponent(trackData.info?.name || "Nothing is Playing"),
@@ -77,6 +78,8 @@ export default class CiderProvider extends AudioServiceProvider {
             trackUrl: trackData.info?.url || "https://ducky.wiki/trackNotFound",
             genres: trackData.info?.genreNames?.length > 0 ? trackData.info.genreNames.map(x => encodeURIComponent(x)) : null,
         }
+
+        apiTrack.hash = this.makeHash(apiTrack);
 
         return apiTrack;
     }
