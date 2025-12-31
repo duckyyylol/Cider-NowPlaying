@@ -150,7 +150,7 @@
 
     <div class="vinyl">
         <img src="/public/img/vinylmiddle.png" alt="" class="plug" />
-        <img src="/public/img/ducky.gif" alt="" class="cover" />
+        <img src="" alt="" class="cover" />
 
         <svg id="record" width="609" height="609" viewBox="0 0 609 609" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g filter="url(#filter0_ddi_536_542)">
@@ -302,19 +302,25 @@
             return JSON.stringify({ command, data, id: 0 });
         }
 
-        async function setTrack(track) {
-            if (track.imageUrl !== null) {
-                const el = document.querySelector(".vinyl")
-                el.style.animation = `loadOut 2s ease forwards`;
-                await delay(500);
-                document.querySelector(".cover").setAttribute("src", track.imageUrl)
-                await delay(500);
-                el.style.animation = `loadIn 2s ease forwards`;
+        let trackId = null;
 
-            } else {
-                document.querySelectorAll(".cover").forEach(e => {
-                    e.setAttribute("src", '/public/img/ducky.gif')
-                })
+        async function setTrack(track) {
+            if(trackId !== track.id) {
+                if (track.imageUrl) {
+                    const el = document.querySelector(".vinyl")
+                    el.style.animation = `loadOut 2s ease forwards`;
+                    await delay(500);
+                    document.querySelector(".cover").setAttribute("src", track.imageUrl)
+                    await delay(500);
+                    el.style.animation = `loadIn 2s ease forwards`;
+                    
+                } else {
+                    document.querySelectorAll(".cover").forEach(e => {
+                        e.setAttribute("src", '/public/img/ducky.gif')
+                    })
+                }
+
+                trackId = track.id;
             }
         }
 
@@ -342,7 +348,7 @@
             if (packet.command === "hello") {
                 authorized = true;
                 fetch("http://localhost:1234/api/tracks/nowplaying").then(r => r.json().then(async ({ data: currentTrack }) => {
-                    if (currentTrack.imageUrl !== null) {document.querySelector(".cover").setAttribute("src", currentTrack.imageUrl)} else {
+                    if (currentTrack.imageUrl !== null) { setTrack(currentTrack) } else {
                         document.querySelector(".cover").setAttribute("src", "/public/img/album_cover.png")
                         document.querySelector(".plug").style.visibility = "hidden";
                     }
@@ -354,13 +360,16 @@
 
             if (packet.command === "newTrack" && authorized) {
                 console.log(packet.data)
-                console.log("CURRENT TRACK ID", id)
-                if (packet.data.imageUrl !== null && packet.data.id !== id) { await setTrack(packet.data); id = packet.data.id; icecast = false; 
+                if (packet.data?.title) {
+                    console.log("CURRENT TRACK ID", id)
+                    if (packet.data.imageUrl && packet.data.id !== id) {
+                        await setTrack(packet.data); id = packet.data.id; icecast = false;
                         document.querySelector(".plug").style.visibility = "visible";
 
-                } else if(packet.data.title != null) {
-                    packet.data.imageUrl = "/public/img/album_cover.png"
-                    if(!icecast) {await setTrack(packet.data); id = packet.data.id; icecast = true;}
+                    } else if(packet.data?.title && !packet.data?.imageUrl) {
+                        packet.data.imageUrl = "/public/img/album_cover.png"
+                        if (!icecast) { await setTrack(packet.data); id = packet.data.id; icecast = true; }
+                    }
                 }
             }
         })

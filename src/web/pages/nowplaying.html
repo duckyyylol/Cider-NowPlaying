@@ -159,13 +159,15 @@
 
             if (packet.command === "newTrack" && authorized) {
                 console.log(packet.data)
-                if(packet.data.imageUrl !== null) {
-                    icecast = false;
-                    setTrack(packet.data);
-                } else if(packet.data.title != null) {
-                    packet.data.imageUrl = "/public/img/album_cover.png"
-                    icecast = true;
-                    setTrack(packet.data);
+                if(packet.data?.title) {
+                    if(packet.data.imageUrl) {
+                        icecast = false;
+                        setTrack(packet.data);
+                    } else if(packet.data?.title && !packet.data?.imageUrl) {
+                        packet.data.imageUrl = "/public/img/album_cover.png"
+                        icecast = true;
+                        setTrack(packet.data);
+                    }
                 }
             }
         })

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+
+<head>
+    <style>
+        @import url("/public/styles/core.css");
+        
+        body {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+        }
+        
+        .list {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+        }
+        
+        img {
+            height: clamp(40px, 48px, 56px);
+            aspect-ratio: 1/1;
+            border-radius: calc(var(--br) / 2);
+        }
+        
+        .track {
+            max-height: 100px;
+            max-width: 800px;
+            padding: 0 2em;
+            padding-top: 0.5em;
+            padding-bottom: 0.5em;
+            background-color: rgba(17, 17, 17, 0.7);
+            box-shadow: 0px 0px 1.975px 1.185px rgba(33, 33, 33, 0.36) inset, 0px 0px 7.898px 0px rgba(0, 0, 0, 0.56);
+            filter: blur(1.1);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+        }
+
+        .track-details {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+            gap: 1em;
+        }
+
+        .track-meta {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3em;
+        }
+
+        .title {
+            font-size: 1.3em;
+        }
+
+        .artist {
+            font-size: 1.2em;
+        }
+
+        .top {
+        border-radius: 0.8em 0.8em 0 0;
+      }
+
+      .mid {
+        border-radius: 0;
+      }
+
+      .low {
+        border-radius: 0 0 0.8em 0.8em;
+      }
+    </style>
+</head>
+
+<body>
+
+    <div class="list">
+
+    </div>
+
+
+    <script>
+        function createPacket(command, data) {
+            return JSON.stringify({ command, data, id: 0 });
+        }
+
+        function createListItem(track, index, max) {
+            const outerDiv = document.createElement("div");
+            outerDiv.classList.add("track");
+
+            const innerDiv = document.createElement("div");
+            innerDiv.classList.add("track-details")
+
+            const img = document.createElement("img");
+            img.setAttribute("src", track.imageUrl);
+            innerDiv.appendChild(img);
+
+            const metaDiv = document.createElement("div");
+            metaDiv.classList.add("track-meta");
+
+            const h1 = document.createElement("h1");
+            h1.classList.add("title");
+            h1.classList.add("bold");
+            h1.innerText = decodeURIComponent(track.title);
+            metaDiv.appendChild(h1);
+
+            // const sep = document.createElement("h1");
+            // sep.classList.add("sep");
+            // sep.classList.add("normal");
+            // sep.innerText = "-"
+            // metaDiv.appendChild(sep);
+
+            // const h1_2 = document.createElement("h1");
+            // h1_2.classList.add("artist")
+            // h1_2.classList.add("bold")
+            // h1_2.innerText = decodeURIComponent(track.artist);
+            // metaDiv.appendChild(h1_2);
+
+            innerDiv.appendChild(metaDiv)
+
+
+            outerDiv.appendChild(innerDiv);
+            if(index === 0) outerDiv.classList.add("top")
+            if(index === (max - 1)) outerDiv.classList.add("low")
+
+            return outerDiv;
+        }
+
+        function processTrackHistory(show_tracks = 5) {
+            const list = document.querySelector(".list");
+            let maxTracksShown = show_tracks;
+            let items = [];
+            fetch("http://localhost:1234/api/tracks/history").then(r => r.json().then(({ data: hist }) => {
+                let trackHistory = Object.entries(hist).filter(([id, t]) => t?.imageUrl != undefined && !t?.imageUrl?.includes("ducky.wiki"))
+                    .sort((a, b) => b[1].lastPlayedTimestamp - a[1].lastPlayedTimestamp);
+
+                trackHistory = trackHistory.slice(0, maxTracksShown);
+
+
+                trackHistory.forEach(([id, track], index, arr) => {
+                    items.push(createListItem(track, index, arr.length));
+                })
+
+                list.replaceChildren(...items);
+                
+                console.log(`Listing ${items.length}/${maxTracksShown} item(s)`)
+            }))
+
+        }
+
+        const searchParams = new URLSearchParams(location.search);
+        const showTracks = (searchParams.has("limit") && !Number.isNaN(parseInt(searchParams.get("limit")))) ? parseInt(searchParams.get("limit")) : 5;
+        
+        let test = false;
+        if (test) {
+            processTrackHistory(showTracks);
+        }
+
+        const socket = new WebSocket("ws://localhost:12345");
+        let authorized = false;
+
+        if (!test) socket.addEventListener("message", ev => {
+            const packet = JSON.parse(ev.data);
+            if (!packet.command || !['hello', 'heartbeat', 'newTrack'].includes(packet.command)) return;
+            console.log(packet.command)
+            if (packet.command === "hello") {
+                authorized = true;
+                socket.send(createPacket("hello", {}))
+                processTrackHistory(showTracks);
+
+                console.log("Authenticating...")
+            }
+
+            if (packet.command === "newTrack" && authorized) {
+                processTrackHistory(showTracks);
+
+            }
+        })
+    </script>
+</body>
