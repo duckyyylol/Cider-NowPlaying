@@ -19,6 +19,15 @@ BASE URL: http://localhost:1234
 > - "left" | "right" | none - Defaults to middle, defines flex alignment for the overlay page content
 > - "inline" - Include to use the inline (text-based) overlay (W ≥1000px x H 75px)
 
+### `/history` W ≤800px x H <>px
+> Display a list of previously played tracks
+>
+> Shows last 5 played tracks by default
+
+![history overlay screenshot](screenshots/history.png)
+> **URL Options**
+> - limit=number - How many tracks will be listed (defaults to 5)
+
 ### `/art/cover`
 > Display the current track's cover art (if available)
 
