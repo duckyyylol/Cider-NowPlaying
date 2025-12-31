@@ -59,7 +59,7 @@
                     items.push(createGridItem(track, rad));
                 })
 
-                grid.style.width = `calc(77px * ${((cols > 3 ? cols : cols - 0.4) + 1.4)})`
+                grid.style.width = `calc(75px * ${((cols > 3 ? cols : cols - 0.4) + 1.4)})`
                 grid.replaceChildren(...items);
                 
                 console.log(`Listing ${items.length}/${maxTracksShown} item(s) - ${cols} columns`)
