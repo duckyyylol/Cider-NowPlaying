@@ -20,4 +20,8 @@ OverlayRoute.get("/art/cover/grid", async (req, res) => {
     res.send(returnHTMLContent("coverGrid"))
 })
 
+OverlayRoute.get("/art/cover/vinyl", async (req, res) => {
+    res.send(returnHTMLContent("vinyl"))
+})
+
 export default OverlayRoute;

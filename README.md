@@ -41,3 +41,12 @@ BASE URL: http://localhost:1234
 > - radius=number | "circle" - The border radius of each individual image in pixels ("circle" for circles) Defaults to 0px (squares)
 > - cols=number - The number of columns to display (defaults to 5)
 > - limit=number - The maximum number of tracks to display (defaults to 30)
+
+### `/art/cover/vinyl` W 610px x H 610px
+> Display a spinning vinyl record displaying the current track's cover art
+>
+> A "loading" in/out animation will play on track change
+
+![vinyl overlay screenshot](/screenshots/vinyl.png) 
+> **URL Options**
+> - spin=0 | 1 - The direction in which the vinyl will spin (0 - Counter Clockwise | 1 - Clockwise) (defaults to Clockwise)

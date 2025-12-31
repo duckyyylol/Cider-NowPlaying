@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<head>
+    <style>
+        @import url("/public/styles/core.css");
+
+        .vinyl {
+            transform: rotateX(10deg);
+            animation-fill-mode: forwards;
+            /* animation: rotating 10s linear infinite; */
+        }
+
+        #record {
+            z-index: 0;
+            position: absolute;
+            top: 0%;
+            left: 0%;
+            /* border: 13px solid rgba(255, 155, 42, 0.2); */
+            border-radius: 500px;
+            margin: 0;
+            /* animation: rotating 10s linear infinite; */
+        }
+
+        .plug {
+            z-index: 2;
+            position: absolute;
+            top: calc(592.368px / 2.1);
+            left: calc(592.368px / 2.1);
+            /* animation: rotating 10s linear infinite; */
+        }
+
+        .cover {
+            z-index: 1;
+            position: absolute;
+            width: 296.184px;
+            height: 296.184px;
+            border-radius: 200px;
+            top: calc(592.368px / 3.8);
+            left: calc(592.368px / 3.8);
+            animation: rotating 10s linear infinite;
+        }
+
+        @-webkit-keyframes rotating {
+            from {
+                -webkit-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            to {
+                -webkit-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes rotating {
+            from {
+                -ms-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -webkit-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            to {
+                -ms-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -webkit-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @-webkit-keyframes loadOut {
+            from {
+                -ms-transform: translateY(0);
+                -moz-transform: translateY(0);
+                -webkit-transform: translateY(0);
+                -o-transform: translateY(0);
+                transform: translateY(0);
+            }
+
+            to {
+                -ms-transform: translateY(-6000px) rotateX(270deg);
+                -moz-transform: translateY(-6000px) rotateX(270deg);
+                -webkit-transform: translateY(-6000px) rotateX(270deg);
+                -o-transform: translateY(-6000px) rotateX(270deg);
+                transform: translateY(-6000px) rotateX(270deg);
+            }
+        }
+
+        @keyframes loadOut {
+            from {
+                -ms-transform: translateY(0);
+                -moz-transform: translateY(0);
+                -webkit-transform: translateY(0);
+                -o-transform: translateY(0);
+                transform: translateY(0);
+            }
+
+            to {
+                -ms-transform: translateY(-6000px) rotateX(270deg);
+                -moz-transform: translateY(-6000px) rotateX(270deg);
+                -webkit-transform: translateY(-6000px) rotateX(270deg);
+                -o-transform: translateY(-6000px) rotateX(270deg);
+                transform: translateY(-6000px) rotateX(270deg);
+            }
+        }
+
+        @-webkit-keyframes loadIn {
+            from {
+                -ms-transform: translateY(-6000px) rotateX(270deg);
+                -moz-transform: translateY(-6000px) rotateX(270deg);
+                -webkit-transform: translateY(-6000px) rotateX(270deg);
+                -o-transform: translateY(-6000px) rotateX(270deg);
+                transform: translateY(-6000px) rotateX(270deg);
+            }
+
+            to {
+                -ms-transform: translateY(0) rotateX(0deg);
+                -moz-transform: translateY(0) rotateX(0deg);
+                -webkit-transform: translateY(0) rotateX(0deg);
+                -o-transform: translateY(0) rotateX(0deg);
+                transform: translateY(0) rotateX(0deg);
+            }
+        }
+
+        @keyframes loadIn {
+            from {
+                -ms-transform: translateY(-6000px) rotateX(270deg);
+                -moz-transform: translateY(-6000px) rotateX(270deg);
+                -webkit-transform: translateY(-6000px) rotateX(270deg);
+                -o-transform: translateY(-6000px) rotateX(270deg);
+                transform: translateY(-6000px) rotateX(270deg);
+            }
+
+            to {
+                -ms-transform: translateY(0) rotateX(0deg);
+                -moz-transform: translateY(0) rotateX(0deg);
+                -webkit-transform: translateY(0) rotateX(0deg);
+                -o-transform: translateY(0) rotateX(0deg);
+                transform: translateY(0) rotateX(0deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="vinyl">
+        <img src="/public/img/vinylmiddle.png" alt="" class="plug" />
+        <img src="/public/img/ducky.gif" alt="" class="cover" />
+
+        <svg id="record" width="609" height="609" viewBox="0 0 609 609" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g filter="url(#filter0_ddi_536_542)">
+                <rect x="8" y="8" width="592.368" height="592.368" rx="296.184" fill="#111111" />
+            </g>
+            <g filter="url(#filter1_di_536_542)">
+                <rect x="37.6184" y="37.6184" width="533.131" height="533.131" rx="266.566" fill="#111111" />
+            </g>
+            <g filter="url(#filter2_di_536_542)">
+                <rect x="67.2368" y="67.2366" width="473.894" height="473.894" rx="236.947" fill="#111111" />
+            </g>
+            <g filter="url(#filter3_di_536_542)">
+                <rect x="96.8552" y="96.855" width="414.658" height="414.658" rx="207.329" fill="#111111" />
+            </g>
+            <g filter="url(#filter4_dif_536_542)">
+                <rect x="126.473" y="126.474" width="355.421" height="355.421" rx="177.71" fill="#111111"
+                    fill-opacity="0.7" shape-rendering="crispEdges" />
+            </g>
+            <rect x="156.092" y="156.092" width="296.184" height="296.184" rx="148.092" fill="white"
+                fill-opacity="0.2" />
+            <defs>
+                <filter id="filter0_ddi_536_542" x="0.101762" y="0.101762" width="608.165" height="608.266"
+                    filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                    <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                        result="hardAlpha" />
+                    <feOffset />
+                    <feGaussianBlur stdDeviation="3.94912" />
+                    <feComposite in2="hardAlpha" operator="out" />
+                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.56 0" />
+                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_536_542" />
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                        result="hardAlpha" />
+                    <feOffset dy="4" />
+                    <feGaussianBlur stdDeviation="2" />
+                    <feComposite in2="hardAlpha" operator="out" />
+                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+                    <feBlend mode="normal" in2="effect1_dropShadow_536_542" result="effect2_dropShadow_536_542" />
+                    <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_536_542" result="shape" />
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                        result="hardAlpha" />
+                    <feMorphology radius="1.18474" operator="erode" in="SourceAlpha"
+                        result="effect3_innerShadow_536_542" />
+                    <feOffset />
+                    <feGaussianBlur stdDeviation="0.98728" />
+                    <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+                    <feColorMatrix type="matrix"
+                        values="0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0.36 0" />
+                    <feBlend mode="normal" in2="shape" result="effect3_innerShadow_536_542" />
+                </filter>
+                <filter id="filter1_di_536_542" x="29.7202" y="29.7202" width="548.928" height="548.928"
+                    filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                    <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                        result="hardAlpha" />
+                    <feOffset />
+                    <feGaussianBlur stdDeviation="3.94912" />
+                    <feComposite in2="hardAlpha" operator="out" />
+                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.56 0" />
+                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_536_542" />
+                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_536_542" result="shape" />
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                        result="hardAlpha" />
+                    <feMorphology radius="1.18474" operator="erode" in="SourceAlpha"
+                        result="effect2_innerShadow_536_542" />
+                    <feOffset />
+                    <feGaussianBlur stdDeviation="0.98728" />
+                    <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+                    <feColorMatrix type="matrix"
+                        values="0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0.36 0" />
+                    <feBlend mode="normal" in2="shape" result="effect2_innerShadow_536_542" />
+                </filter>
+                <filter id="filter2_di_536_542" x="59.3386" y="59.3383" width="489.691" height="489.691"
+                    filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                    <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                        result="hardAlpha" />
+                    <feOffset />
+                    <feGaussianBlur stdDeviation="3.94912" />
+                    <feComposite in2="hardAlpha" operator="out" />
+                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.56 0" />
+                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_536_542" />
+                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_536_542" result="shape" />
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                        result="hardAlpha" />
+                    <feMorphology radius="1.18474" operator="erode" in="SourceAlpha"
+                        result="effect2_innerShadow_536_542" />
+                    <feOffset />
+                    <feGaussianBlur stdDeviation="0.98728" />
+                    <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+                    <feColorMatrix type="matrix"
+                        values="0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0.36 0" />
+                    <feBlend mode="normal" in2="shape" result="effect2_innerShadow_536_542" />
+                </filter>
+                <filter id="filter3_di_536_542" x="88.957" y="88.9567" width="430.454" height="430.454"
+                    filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                    <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                        result="hardAlpha" />
+                    <feOffset />
+                    <feGaussianBlur stdDeviation="3.94912" />
+                    <feComposite in2="hardAlpha" operator="out" />
+                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.56 0" />
+                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_536_542" />
+                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_536_542" result="shape" />
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                        result="hardAlpha" />
+                    <feMorphology radius="1.18474" operator="erode" in="SourceAlpha"
+                        result="effect2_innerShadow_536_542" />
+                    <feOffset />
+                    <feGaussianBlur stdDeviation="0.98728" />
+                    <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+                    <feColorMatrix type="matrix"
+                        values="0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0.36 0" />
+                    <feBlend mode="normal" in2="shape" result="effect2_innerShadow_536_542" />
+                </filter>
+                <filter id="filter4_dif_536_542" x="121.734" y="121.735" width="364.899" height="364.899"
+                    filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                    <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                        result="hardAlpha" />
+                    <feOffset />
+                    <feGaussianBlur stdDeviation="2.36947" />
+                    <feComposite in2="hardAlpha" operator="out" />
+                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.56 0" />
+                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_536_542" />
+                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_536_542" result="shape" />
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                        result="hardAlpha" />
+                    <feMorphology radius="2.36947" operator="erode" in="SourceAlpha"
+                        result="effect2_innerShadow_536_542" />
+                    <feOffset />
+                    <feGaussianBlur stdDeviation="0.592368" />
+                    <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+                    <feColorMatrix type="matrix"
+                        values="0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0 0.129808 0 0 0 0.36 0" />
+                    <feBlend mode="normal" in2="shape" result="effect2_innerShadow_536_542" />
+                    <feGaussianBlur stdDeviation="0.592368" result="effect3_foregroundBlur_536_542" />
+                </filter>
+            </defs>
+        </svg>
+    </div>
+
+
+    <script>
+        let delay = ms => new Promise(res => setTimeout(res, ms));
+
+        function createPacket(command, data) {
+            return JSON.stringify({ command, data, id: 0 });
+        }
+
+        async function setTrack(track) {
+            if (track.imageUrl !== null) {
+                const el = document.querySelector(".vinyl")
+                el.style.animation = `loadOut 2s ease forwards`;
+                await delay(500);
+                document.querySelector(".cover").setAttribute("src", track.imageUrl)
+                await delay(500);
+                el.style.animation = `loadIn 2s ease forwards`;
+
+            } else {
+                document.querySelectorAll(".cover").forEach(e => {
+                    e.setAttribute("src", '/public/img/ducky.gif')
+                })
+            }
+        }
+
+        const searchParams = new URLSearchParams(location.search);
+
+        const spin = (searchParams.has("spin") && !Number.isNaN(parseInt(searchParams.get("spin"))) && [0, 1].includes(parseInt(searchParams.get("spin")))) ? parseInt(searchParams.get("spin")) : 1;
+        const spinEnabled = searchParams.has("spin")
+
+        if (spinEnabled) {
+            document.querySelectorAll(".cover").forEach(e => {
+                e.style.animation = `rotating 10s linear infinite`;
+                e.style.animationDirection = spin === 0 ? "reverse" : "normal";
+            })
+        }
+
+        const socket = new WebSocket("ws://localhost:12345");
+        let authorized = false;
+        let id = null;
+        let icecast = false;
+
+        socket.addEventListener("message", async ev => {
+            const packet = JSON.parse(ev.data);
+            if (!packet.command || !['hello', 'heartbeat', 'newTrack'].includes(packet.command)) return;
+            console.log(packet.command)
+            if (packet.command === "hello") {
+                authorized = true;
+                fetch("http://localhost:1234/api/tracks/nowplaying").then(r => r.json().then(async ({ data: currentTrack }) => {
+                    if (currentTrack.imageUrl !== null) {document.querySelector(".cover").setAttribute("src", currentTrack.imageUrl)} else {
+                        document.querySelector(".cover").setAttribute("src", "/public/img/album_cover.png")
+                        document.querySelector(".plug").style.visibility = "hidden";
+                    }
+                    id = currentTrack.id;
+                }))
+                socket.send(createPacket("hello", {}))
+                console.log("Authenticating...")
+            }
+
+            if (packet.command === "newTrack" && authorized) {
+                console.log(packet.data)
+                console.log("CURRENT TRACK ID", id)
+                if (packet.data.imageUrl !== null && packet.data.id !== id) { await setTrack(packet.data); id = packet.data.id; icecast = false; 
+                        document.querySelector(".plug").style.visibility = "visible";
+
+                } else if(packet.data.title != null) {
+                    packet.data.imageUrl = "/public/img/album_cover.png"
+                    if(!icecast) {await setTrack(packet.data); id = packet.data.id; icecast = true;}
+                }
+            }
+        })
+    </script>
+</body>

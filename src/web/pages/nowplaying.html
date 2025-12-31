@@ -68,7 +68,6 @@
             align-items: flex-start;
             justify-content: space-between;
         }
-
     </style>
 </head>
 
@@ -78,7 +77,7 @@
         <img src="" class="cover">
         <div class="song-details">
             <h1 class="bold title"></h1>
-                <h1 class="normal artist"></h1>
+            <h1 class="normal artist"></h1>
         </div>
     </div>
     <div class="inline">
@@ -102,18 +101,22 @@
                 e.innerText = decodeURIComponent(track.artist);
             })
             console.log((decodeURIComponent(track.artist).length + track?.album?.length) + "/75")
-            if(track.album !== null && ((decodeURIComponent(track.artist).length + track?.album?.length) <= 75)) {
+            if (track.album !== null && ((decodeURIComponent(track.artist).length + track?.album?.length) <= 75)) {
                 document.querySelectorAll(".album").forEach(e => {
-                e.innerText = `[${decodeURIComponent(track.album)}]`;
-            })
-            document.querySelectorAll(".card .artist").forEach(e => {
-                e.innerText = `${decodeURIComponent(track.artist)} [${decodeURIComponent(track.album)}]`;
-            })
+                    e.innerText = `[${decodeURIComponent(track.album)}]`;
+                })
+                document.querySelectorAll(".card .artist").forEach(e => {
+                    e.innerText = `${decodeURIComponent(track.artist)} [${decodeURIComponent(track.album)}]`;
+                })
             }
-            if(track.imageUrl !== null) {
+            if (track.imageUrl !== null) {
                 document.querySelectorAll(".cover").forEach(e => {
-                e.setAttribute("src", track.imageUrl)
-            })
+                    e.setAttribute("src", track.imageUrl)
+                })
+            } else {
+                document.querySelectorAll(".cover").forEach(e => {
+                    e.setAttribute("src", "/public/img/album_cover.png")
+                })
             }
         }
 
@@ -135,31 +138,35 @@
         document.querySelector(".inline").style.justifyContent = align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center"
         document.querySelector("body").style.justifyContent = align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center"
 
-        let test = false;
-        if(test) {
-            let track;
-            fetch("http://localhost:1234/api/tracks/nowplaying").then(r => r.json().then(currentTrack => {
-                setTrack(currentTrack.data)
-                console.log(currentTrack.data)
-            }))
-        }
-
         const socket = new WebSocket("ws://localhost:12345");
         let authorized = false;
 
-        if(!test) socket.addEventListener("message", ev => {
+        let icecast = false;
+
+        socket.addEventListener("message", ev => {
             const packet = JSON.parse(ev.data);
-            if(!packet.command || !['hello', 'heartbeat', 'newTrack'].includes(packet.command)) return;
+            if (!packet.command || !['hello', 'heartbeat', 'newTrack'].includes(packet.command)) return;
             console.log(packet.command)
-            if(packet.command === "hello") {
+            if (packet.command === "hello") {
                 authorized = true;
+                fetch("http://localhost:1234/api/tracks/nowplaying").then(r => r.json().then(currentTrack => {
+                    setTrack(currentTrack.data)
+                    console.log(currentTrack.data)
+                }))
                 socket.send(createPacket("hello", {}))
                 console.log("Authenticating...")
             }
 
-            if(packet.command === "newTrack" && authorized) {
+            if (packet.command === "newTrack" && authorized) {
                 console.log(packet.data)
-                setTrack(packet.data);
+                if(packet.data.imageUrl !== null) {
+                    icecast = false;
+                    setTrack(packet.data);
+                } else if(packet.data.title != null) {
+                    packet.data.imageUrl = "/public/img/album_cover.png"
+                    icecast = true;
+                    setTrack(packet.data);
+                }
             }
         })
     </script>
