@@ -66,6 +66,29 @@ export default class CiderProvider extends AudioServiceProvider {
         return { data: apiTrack, error: null };
     }
 
+    async getStorefront(): Promise<Response<string>> {
+        const amApiResonse = await this.POST("/amapi/run-v3", JSON.stringify({path: "/v1/me/storefront"}));
+        if(amApiResonse.error !== null || amApiResonse.data === null || !amApiResonse.data?.data) return {error: "Not Found", data: null};
+        const {data: realResponse} = amApiResonse.data;
+        if(!realResponse?.data || !realResponse?.data?.[0]?.id) return {error: "Not Found", data: null};
+        const storefrontId = realResponse.data[0].id;
+
+        return {data: storefrontId, error: null};
+    }
+
+    async getTrackById(appleMusicId: string) {
+        const storefrontResponse = await this.getStorefront();
+        if(storefrontResponse.error !== null) return {data: null, error: "Not Found"};
+
+        const amApiSongResponse = await this.POST("/amapi/run-v3", JSON.stringify({path: `/v1/catalog/${storefrontResponse.data}/songs/${appleMusicId}`}));
+        if(amApiSongResponse.error !== null || amApiSongResponse.data === null || !amApiSongResponse.data?.data) return {data: null, error: "Not Found"};
+
+        const {data: realResponse} = amApiSongResponse.data;
+        if(!realResponse?.data || !realResponse?.data?.[0]?.id) return {error: "Not Found", data: null};
+
+        return {data: realResponse, error: null};
+    }
+
     translateTrack(trackData: CiderNowPlayingResponse): Track {
         let apiTrack: Track = {
             hash: null,
@@ -77,6 +100,8 @@ export default class CiderProvider extends AudioServiceProvider {
             lastPlayedTimestamp: Date.now(),
             trackUrl: trackData.info?.url || "https://ducky.wiki/trackNotFound",
             genres: trackData.info?.genreNames?.length > 0 ? trackData.info.genreNames.map(x => encodeURIComponent(x)) : null,
+            provider: this.serviceName as any,
+            has_controls: true
         }
 
         apiTrack.hash = this.makeHash(apiTrack);

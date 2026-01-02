@@ -54,7 +54,9 @@ export default class IcecastProvider extends AudioServiceProvider {
             imageUrl: null,
             trackUrl: "https://ducky.wiki/trackNotFound",
             lastPlayedTimestamp: Date.now(),
-            hash: null
+            hash: null,
+            provider: this.serviceName as any,
+            has_controls: false
         };
 
         apiTrack.hash = this.makeHash(apiTrack);

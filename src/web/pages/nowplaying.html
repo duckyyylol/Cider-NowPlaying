@@ -160,11 +160,11 @@
             if (packet.command === "newTrack" && authorized) {
                 
                 console.log(packet.data)
-                if(packet.data?.title && packet.data?.artist) {
+                if(packet.data?.title && packet.data?.artist !== null) {
                     if(packet.data.imageUrl) {
                         icecast = false;
                         setTrack(packet.data);
-                    } else if(packet.data?.title && !packet.data?.imageUrl) {
+                    } else if(packet.data?.title && packet.data?.artist !== null) {
                         packet.data.imageUrl = "/public/img/album_cover.png"
                         icecast = true;
                         setTrack(packet.data);

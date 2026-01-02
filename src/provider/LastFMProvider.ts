@@ -80,7 +80,9 @@ export default class LastFMProvider extends AudioServiceProvider {
             imageUrl: largeImage ? largeImage["#text"] : null,
             trackUrl: trackData?.url || "https://ducky.wiki/trackNotFound",
             lastPlayedTimestamp: Date.now(),
-            hash: null
+            hash: null,
+            provider: this.serviceName as any,
+            has_controls: false
         };
 
         apiTrack.hash = this.makeHash(apiTrack);

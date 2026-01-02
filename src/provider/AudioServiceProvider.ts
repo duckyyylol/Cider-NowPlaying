@@ -1,4 +1,4 @@
-import { AxiosError, AxiosResponse, get, HttpStatusCode } from "axios";
+import { AxiosError, AxiosResponse, get, HttpStatusCode, post } from "axios";
 
 export interface Response<T = any> {
     error: string | null;
@@ -15,6 +15,8 @@ export interface Track {
     imageUrl: string | null;
     genres: string[] | null;
     hash: string;
+    provider: "cider" | "icecast" | "lastfm";
+    has_controls: boolean;
 }
 
 export interface JSON_StoredTrack {
@@ -28,8 +30,6 @@ export function statusError(result: AxiosResponse): Response {
 export function returnData(result: AxiosResponse): Response {
     return { data: result.data, error: null };
 }
-
-
 
 export default class AudioServiceProvider {
     baseUrl: string;
@@ -76,6 +76,22 @@ export default class AudioServiceProvider {
 
         try {
             res = await get(`${this.baseUrl}${this.baseEndpoint}${endpoint}`, {headers: {"Content-Type": "application/json"}});
+
+            if (!res || !res.data) return statusError(res);
+            if (res.status !== HttpStatusCode.Ok) return statusError(res);
+
+            return returnData(res);
+        } catch (e) {
+            return statusError(e)
+        }
+
+    }
+
+    async POST(endpoint: string, body: any = {}, contentType: string = "application/json"): Promise<Response> {
+        let res: AxiosResponse | null = null;
+
+        try {
+            res = await post(`${this.baseUrl}${this.baseEndpoint}${endpoint}`, body, {headers: {"Content-Type": contentType}});
 
             if (!res || !res.data) return statusError(res);
             if (res.status !== HttpStatusCode.Ok) return statusError(res);
