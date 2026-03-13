@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<head>
+    <style>
+        @import url("/public/styles/core.css");
+
+        body {
+            position: absolute;
+            top:0;
+            left:0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+
+            background-repeat: no-repeat;
+            background-origin: 0;
+            background-position: 0px -500px;
+            background-size: cover;
+            z-index: -1;
+            
+            animation: 6s grow ease-in-out infinite;
+        }
+
+        @keyframes grow {
+            0%,100%{
+                background-size: 100%;
+            }
+            50% {
+                background-size: 105%;
+            }
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            height: 100%;
+            width: 100%;
+
+            background-color: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(10px);
+
+            z-index: 2;
+        }
+
+        #track {
+            margin-left: auto;
+            margin-right: auto;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            width: 50%;
+
+            z-index: 3;
+        }
+
+        #inner {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+
+            gap: 1em;
+        }
+
+        #title {
+            font-size: 2em;
+            margin: 0;
+        }
+
+        #artist {
+            font-size: 1.33em;
+            margin: 0;
+            opacity: 0.6;
+        }
+
+        .cover {
+            max-width: 512px;
+            max-height: 512px;
+            aspect-ratio: 1/1;
+            z-index: 10;
+            border-radius: 16px;
+        }
+
+        @-webkit-keyframes rotating {
+            from {
+                -webkit-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            to {
+                -webkit-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes rotating {
+            from {
+                -ms-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -webkit-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            to {
+                -ms-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -webkit-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="background"></div>
+    <div id="overlay"></div>
+
+    <div id="track">
+        <div id="inner">
+            <img src="/public/img/ducky.gif" class="cover">
+            <h1 id="title" class="bold"></h1>
+            <h3 class="normal" id="artist"></h3>
+        </div>
+    </div>
+
+
+    <script>
+        function createPacket(command, data) {
+            return JSON.stringify({ command, data, id: 0 });
+        }
+
+        function setTrack(track) {
+            if (track.imageUrl !== null) {
+                document.querySelectorAll(".cover").forEach(e => {
+                    e.setAttribute("src", track.imageUrl)
+                })
+                document.body.style.setProperty("background-image", `url("${track.imageUrl}")`)
+            } else {
+                document.querySelectorAll(".cover").forEach(e => {
+                    e.setAttribute("src", '/public/img/ducky.gif')
+                })
+            }
+            document.querySelectorAll("#title").forEach(e => {
+                e.innerText = decodeURIComponent(track.title);
+            })
+
+            document.querySelectorAll("#artist").forEach(e => {
+                e.innerText = decodeURIComponent(track.artist);
+            })
+        }
+
+        const searchParams = new URLSearchParams(location.search);
+
+        // document.querySelector("body").style.justifyContent = align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center"
+
+        let test = true;
+        if (test) {
+            let track;
+            fetch("http://localhost:1234/api/tracks/nowplaying").then(r => r.json().then(currentTrack => {
+                setTrack(currentTrack.data)
+                console.log(currentTrack.data)
+            }))
+        }
+
+        const socket = new WebSocket("ws://localhost:12345");
+        let authorized = false;
+
+        if (!test) socket.addEventListener("message", ev => {
+            const packet = JSON.parse(ev.data);
+            if (!packet.command || !['hello', 'heartbeat', 'newTrack'].includes(packet.command)) return;
+            console.log(packet.command)
+            if (packet.command === "hello") {
+                authorized = true;
+                socket.send(createPacket("hello", {}))
+                console.log("Authenticating...")
+            }
+
+            if (packet.command === "newTrack" && authorized) {
+                console.log(packet.data)
+                setTrack(packet.data);
+            }
+        })
+    </script>
+</body>

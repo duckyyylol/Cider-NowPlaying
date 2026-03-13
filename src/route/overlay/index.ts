@@ -28,4 +28,8 @@ OverlayRoute.get("/art/cover/vinyl", async (req, res) => {
     res.send(returnHTMLContent("vinyl"))
 })
 
+OverlayRoute.get("/nowplaying/immersive", async (req, res) => {
+    res.send(returnHTMLContent("immersive"))
+})
+
 export default OverlayRoute;

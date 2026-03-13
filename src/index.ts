@@ -14,6 +14,7 @@ import OverlayRoute from "./route/overlay";
 import { WebSocketServer } from "ws";
 import { randomUUID } from "node:crypto";
 import { CommandBuilder } from "./class/CommandBuilder";
+import { Agent } from "node:https";
 
 configDotenv({ quiet: true, path: join(process.cwd(), ".env") })
 
@@ -182,8 +183,8 @@ _emitter.on(AppEvents.NewTrack, (track: Track) => {
     // POST TO DUCKY API
     if (process.env.DUCKY_API_KEY) {
         try {
-            post(`https://ducky.wiki/api/music/tracks/${track.id}`, { ...track, addedTimestamp: track.lastPlayedTimestamp }, { headers: { "apikey": process.env.DUCKY_API_KEY } }).catch(e => {
-                console.log("Couldn't POST to Ducky API")
+            post(`https://api.ducky.wiki/music/tracks/${track.id}`, { ...track, addedTimestamp: track.lastPlayedTimestamp }, { headers: { "apikey": process.env.DUCKY_API_KEY }, httpsAgent: new Agent({rejectUnauthorized: false}) }).catch(e => {
+                console.log("Couldn't POST to Ducky API", e)
             })
         } catch(e) {
             console.log("Couldn't POST to Ducky API.")
