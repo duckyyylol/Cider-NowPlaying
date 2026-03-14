@@ -6,8 +6,8 @@
 
         body {
             position: absolute;
-            top:0;
-            left:0;
+            top: 0;
+            left: 0;
             width: 100vw;
             height: 100vh;
             display: flex;
@@ -16,17 +16,20 @@
 
             background-repeat: no-repeat;
             background-origin: 0;
-            background-position: 0px -500px;
+            background-position: 0px 0px;
             background-size: cover;
             z-index: -1;
-            
+
             animation: 6s grow ease-in-out infinite;
         }
 
         @keyframes grow {
-            0%,100%{
+
+            0%,
+            100% {
                 background-size: 100%;
             }
+
             50% {
                 background-size: 105%;
             }
@@ -118,6 +121,76 @@
                 transform: rotate(360deg);
             }
         }
+
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes hideBg {
+            0% {
+                background-color: rgba(0, 0, 0, 0.55);
+                backdrop-filter: blur(10px);
+            }
+
+            60% {
+                background-color: rgba(0, 0, 0, 0.9);
+                backdrop-filter: blur(30px);
+            }
+
+            100% {
+                background-color: rgba(0, 0, 0, 1);
+                backdrop-filter: blur(30px);
+            }
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes showBg {
+            100% {
+                background-color: rgba(0, 0, 0, 0.55);
+                backdrop-filter: blur(10px);
+            }
+
+            60% {
+                background-color: rgba(0, 0, 0, 0.9);
+                backdrop-filter: blur(30px);
+            }
+
+            0% {
+                background-color: rgba(0, 0, 0, 1);
+                backdrop-filter: blur(30px);
+            }
+        }
+
+        .fadeOut {
+            animation: 1s fadeOut ease-out forwards;
+        }
+
+        .hideBg {
+            animation: 1s hideBg ease-out forwards;
+        }
+
+        .fadeIn {
+            animation: 1s fadeIn ease-out forwards;
+        }
+
+        .showBg {
+            animation: 1s showBg ease-out forwards;
+        }
     </style>
 </head>
 
@@ -139,38 +212,89 @@
             return JSON.stringify({ command, data, id: 0 });
         }
 
-        function setTrack(track) {
-            if (track.imageUrl !== null) {
-                document.querySelectorAll(".cover").forEach(e => {
-                    e.setAttribute("src", track.imageUrl)
+        function setTrack(track, first = false) {
+            if (!first) document.querySelectorAll("#overlay").forEach(e => {
+                e.classList.remove("showBg")
+                e.classList.add("hideBg")
+
+                e.addEventListener('animationend', eb => {
+                    document.querySelectorAll("#overlay").forEach(e => {
+                        e.classList.remove("hideBg")
+                        e.classList.add("showBg")
+                    })
+
+
                 })
-                document.body.style.setProperty("background-image", `url("${track.imageUrl}")`)
-            } else {
-                document.querySelectorAll(".cover").forEach(e => {
-                    e.setAttribute("src", '/public/img/ducky.gif')
-                })
-            }
-            document.querySelectorAll("#title").forEach(e => {
-                e.innerText = decodeURIComponent(track.title);
             })
 
-            document.querySelectorAll("#artist").forEach(e => {
-                e.innerText = decodeURIComponent(track.artist);
+            if (!first) document.querySelectorAll("#track").forEach(e => {
+                e.classList.remove("fadeIn")
+                e.classList.add("fadeOut")
+
+                e.addEventListener("animationend", eb => {
+                    document.querySelectorAll("#track").forEach(e => {
+                        e.classList.remove("fadeOut")
+                        e.classList.add("fadeIn")
+
+                        document.querySelectorAll("#title").forEach(e => {
+                            e.innerText = decodeURIComponent(track.title);
+                        })
+
+                        document.querySelectorAll("#artist").forEach(e => {
+                            e.innerText = decodeURIComponent(track.artist);
+                        })
+                    })
+
+                    if (track.imageUrl !== null) {
+                        document.querySelectorAll(".cover").forEach(e => {
+                            e.setAttribute("src", track.imageUrl)
+                        })
+                        document.body.style.setProperty("background-image", `url("${track.imageUrl}")`)
+                    } else {
+                        document.querySelectorAll(".cover").forEach(e => {
+                            e.setAttribute("src", '/public/img/ducky.gif')
+                        })
+                    }
+                })
             })
+
+
+
+            if (first) {
+                if (track.imageUrl !== null) {
+                    document.querySelectorAll(".cover").forEach(e => {
+                        e.setAttribute("src", track.imageUrl)
+                    })
+                    document.body.style.setProperty("background-image", `url("${track.imageUrl}")`)
+                } else {
+                    document.querySelectorAll(".cover").forEach(e => {
+                        e.setAttribute("src", '/public/img/ducky.gif')
+                    })
+                }
+
+                document.querySelectorAll("#title").forEach(e => {
+                    e.innerText = decodeURIComponent(track.title);
+                })
+
+                document.querySelectorAll("#artist").forEach(e => {
+                    e.innerText = decodeURIComponent(track.artist);
+                })
+            }
+
         }
 
         const searchParams = new URLSearchParams(location.search);
 
         // document.querySelector("body").style.justifyContent = align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center"
 
-        let test = true;
-        if (test) {
-            let track;
-            fetch("http://localhost:1234/api/tracks/nowplaying").then(r => r.json().then(currentTrack => {
-                setTrack(currentTrack.data)
-                console.log(currentTrack.data)
-            }))
-        }
+        let test = false;
+        // if (test) {
+        //     let track;
+        fetch("http://localhost:1234/api/tracks/nowplaying").then(r => r.json().then(currentTrack => {
+            setTrack(currentTrack.data, true)
+            console.log(currentTrack.data)
+        }))
+        // }
 
         const socket = new WebSocket("ws://localhost:12345");
         let authorized = false;
