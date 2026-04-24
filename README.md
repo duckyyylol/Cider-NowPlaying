@@ -1,5 +1,7 @@
 The repository name has lost the plot.
 
+[Documentation](https://docs.ducky.wiki/projects/ducky_radio)
+
 BASE URL: http://localhost:1234
 
 ### API URLS `/api`
